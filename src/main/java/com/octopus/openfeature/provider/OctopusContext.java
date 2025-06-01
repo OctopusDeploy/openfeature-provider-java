@@ -1,6 +1,7 @@
 package com.octopus.openfeature.provider;
 
 import dev.openfeature.sdk.*;
+import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 
 import java.util.List;
 import java.util.Map;
@@ -23,22 +24,28 @@ class OctopusContext {
     byte[] getContentHash() { return featureToggles.getContentHash(); }
 
     ProviderEvaluation<Boolean> evaluate(String slug, Boolean defaultValue, EvaluationContext evaluationContext) {
-        var toggleValue = featureToggles.getEvaluations().stream().filter(f -> f.getSlug().equals(slug)).findFirst().orElse(null);
+        // find the feature toggle matching the slug
+        var toggleValue = featureToggles.getEvaluations().stream().filter(f -> f.getSlug().equalsIgnoreCase(slug)).findFirst().orElse(null);
 
+        // this exception will be handled by OpenFeature, and the default value will be used
         if (toggleValue == null) {
+           throw new FlagNotFoundError(); 
+        }
+        
+        // if the toggle is disabled, or if it has no segments, then we don't need to evaluate dynamically 
+        if (!toggleValue.isEnabled() || toggleValue.getSegments().isEmpty()) {
             return ProviderEvaluation.<Boolean>builder()
-                    .errorMessage(String.format("flag: %s not found", slug))
-                    .errorCode(ErrorCode.FLAG_NOT_FOUND)
+                    .value(toggleValue.isEnabled())
+                    .reason(Reason.DEFAULT.toString())
                     .build();
         }
-
+        
+        // If the toggle is enabled and has segments configured, then we need to evaluate dynamically, 
+        // checking the context matches the segments
         return ProviderEvaluation.<Boolean>builder()
-                .value(evaluate(toggleValue, evaluationContext))
+                .value(MatchesSegment(evaluationContext, toggleValue.getSegments()))
+                .reason(Reason.TARGETING_MATCH.toString())
                 .build();
-    }
-
-    private Boolean evaluate(FeatureToggleEvaluation evaluation, EvaluationContext evaluationContext) {
-        return evaluation.isEnabled() && (evaluation.getSegments().isEmpty() || MatchesSegment(evaluationContext, evaluation.getSegments()));
     }
 
     private Boolean MatchesSegment(EvaluationContext evaluationContext, List<Map.Entry<String, String>> segments) {

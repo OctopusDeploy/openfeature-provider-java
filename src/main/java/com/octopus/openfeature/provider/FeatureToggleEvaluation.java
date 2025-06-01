@@ -1,5 +1,6 @@
 package com.octopus.openfeature.provider;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +14,11 @@ class FeatureToggleEvaluation {
         this.name = name;
         this.slug = slug;
         this.isEnabled = isEnabled;
-        this.segments = segments;
+        
+        this.segments = new ArrayList<>();
+        if (segments != null) {
+            this.segments.addAll(segments);
+        }
     }
 
     public String getName() {
