@@ -4,15 +4,28 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.octopus</groupId>
-    <artifactId>openfeature</artifactId>
+    <groupId>com.octopus.openfeature</groupId>
+    <artifactId>octopus-openfeature-provider</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    
+    <name>Octopus Deploy OpenFeature Provider</name>
+    <description>The Octopus Deploy provider for OpenFeature</description>
+    <url>https://octopus.com/docs/feature-toggles</url>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/OctopusDeploy/openfeature-provider-java</url>
+        </repository>
+    </distributionManagement>
     
     <dependencies>
         <dependency>
