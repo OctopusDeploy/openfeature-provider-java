@@ -18,7 +18,7 @@ This provider will work with Java 11 and above.
 
 Install the Octopus OpenFeature provider as a dependency using your application's dependency managager. The Maven example is shown below. 
 
-```
+```xml
 <dependency>
     <groupId>com.octopus.openfeature</groupId>
     <artifactId>octopus-openfeature-provider</artifactId>
@@ -42,8 +42,6 @@ public class Main {
         var darkModeIsEnabled = openFeatureClient.getBooleanValue("dark-mode", false);
     }
 }
-
-
 ```
 
 For information on using the OpenFeature client please refer to the [OpenFeature Documentation](https://docs.openfeature.dev/docs/reference/concepts/evaluation-api/).
