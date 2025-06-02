@@ -23,8 +23,8 @@ public class OctopusProvider extends EventProvider {
 
     @Override
     public void shutdown() {
-        contextProvider.shutdown();
         super.shutdown();
+        contextProvider.shutdown();
     }
 
     @Override

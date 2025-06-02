@@ -95,7 +95,8 @@ class OctopusClient {
         return statusCode >= 200 && statusCode < 300;
     }
 
-    private class FeatureToggleCheckResponse {
+    // This class needs to be static to allow deserialization
+    private static class FeatureToggleCheckResponse {
        byte[] contentHash; 
     } 
 }
