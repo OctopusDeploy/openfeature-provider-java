@@ -16,13 +16,18 @@ This provider will work with Java 11 and above.
 
 ### Installation
 
-Install the Octopus OpenFeature provider as a dependency using your application's dependency managager. The Maven example is shown below. 
+The Octopus OpenFeature provider for Java is currently published to [GitHub Packages](https://github.com/OctopusDeploy/openfeature-provider-java/packages/2528379). It will be published to the Maven Central repository soon.
+
+To add Maven package dependencies from GitHub Packages, you must configure an [authentication token](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry#authenticating-to-github-packages).
+
+Once this is configured, you can add the Octopus OpenFeature provider as a dependency. The Maven example is shown below.
+
 
 ```xml
 <dependency>
     <groupId>com.octopus.openfeature</groupId>
     <artifactId>octopus-openfeature-provider</artifactId>
-    <version>1.0.0</version> <!-- use current version number -->
+    <version>0.1.0</version> <!-- use current version number -->
 </dependency>
 ```
 
