@@ -29,8 +29,7 @@ class OctopusClient {
        if (contentHash.length == 0) { return true; }
        URI checkURI = getCheckURI();
         HttpClient client = HttpClient.newHttpClient();
-       // TODO: check client is v3
-        HttpRequest request = HttpRequest.newBuilder() 
+        HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(checkURI)
                 .header("Authorization", String.format("Bearer %s", config.getClientIdentifier()))
@@ -50,7 +49,6 @@ class OctopusClient {
     {
         URI manifestURI = getManifestURI();
         HttpClient client = HttpClient.newHttpClient();
-        // TODO: check client is v3
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(manifestURI)
@@ -97,6 +95,6 @@ class OctopusClient {
 
     // This class needs to be static to allow deserialization
     private static class FeatureToggleCheckResponse {
-       byte[] contentHash; 
+       public byte[] contentHash;
     } 
 }
