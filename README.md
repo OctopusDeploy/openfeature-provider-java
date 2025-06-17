@@ -81,7 +81,7 @@ public class Main {
     
     public static void main(String[] args) {
         var openFeature = OpenFeatureAPI.getInstance();
-        openFeature.setProvider(new OctopusProvider(new OctopusConfiguration("Your Octopus client identifier")));
+        openFeature.setProviderAndWait(new OctopusProvider(new OctopusConfiguration("Your Octopus client identifier")));
         var openFeatureClient = openFeature.getClient(); 
         
         var darkModeIsEnabled = openFeatureClient.getBooleanValue("dark-mode", false);
