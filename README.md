@@ -16,59 +16,19 @@ This provider will work with Java 11 and above.
 
 ### Installation
 
-The Octopus OpenFeature provider for Java is currently published to [GitHub Packages](https://github.com/OctopusDeploy/openfeature-provider-java/packages/2528379). It will be published to the Maven Central repository soon.
-
-To add Maven package dependencies from GitHub Packages, you will need to add a Maven repository (in either your `settings.xml` or `pom.xml`), and create a GitHub Personal Access Token (classic) with `read:packages` scope, and configure this to be used to authenticate. An example `settings.xml` is shown below:  
-
-```xml
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
-                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
-
-  <activeProfiles>
-    <activeProfile>github</activeProfile>
-  </activeProfiles>
-
-  <profiles>
-    <profile>
-      <id>github</id>
-      <repositories>
-        <repository>
-          <id>central</id>
-          <url>https://repo1.maven.org/maven2</url>
-        </repository>
-        <repository>
-          <id>github</id>
-          <url>https://maven.pkg.github.com/OctopusDeploy/openfeature-provider-java</url>
-          <snapshots>
-            <enabled>true</enabled>
-          </snapshots>
-        </repository>
-      </repositories>
-    </profile>
-  </profiles>
-
-  <servers>
-    <server>
-      <id>github</id>
-      <username>USERNAME</username>
-      <password>TOKEN</password>
-    </server>
-  </servers>
-</settings>
-```
-Read the GitHub docs for more information on [working with GitHub Packages as a Maven registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry#authenticating-to-github-packages).
-
-Once this is configured, you can add the Octopus OpenFeature provider as a dependency. The Maven example is shown below.
-
+The Octopus OpenFeature provider for Java is available as a [Maven package](https://central.sonatype.com/artifact/com.octopus.openfeature/octopus-openfeature-provider). You can add it to your project using your dependency manager (e.g. Maven or Gradle).
 
 ```xml
 <dependency>
     <groupId>com.octopus.openfeature</groupId>
     <artifactId>octopus-openfeature-provider</artifactId>
-    <version>0.1.0</version> <!-- use current version number -->
+    <version>0.2.0</version> <!-- use current version number -->
 </dependency>
+```
+
+```groovy
+implementation group: 'com.octopus.openfeature', name: 'octopus-openfeature-provider', version: '0.2.0'
+// Use current version number
 ```
 
 ### Usage 
