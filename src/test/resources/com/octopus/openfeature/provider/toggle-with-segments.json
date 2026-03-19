@@ -1,0 +1,9 @@
+{
+  "name": "My Feature",
+  "slug": "my-feature",
+  "isEnabled": true,
+  "segments": [
+    { "license-type": "free" },
+    { "country": "au" }
+  ]
+}
