@@ -3,7 +3,13 @@
   "slug": "my-feature",
   "isEnabled": true,
   "segments": [
-    { "license-type": "free" },
-    { "country": "au" }
+    {
+      "key": "license-type",
+      "value": "free"
+    },
+    {
+      "key": "country",
+      "value": "au"
+    }
   ]
 }
