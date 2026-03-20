@@ -68,4 +68,15 @@ class FeatureToggleEvaluationDeserializationTests {
         assertThat(result.get(1).getSlug()).isEqualTo("feature-b");
         assertThat(result.get(1).isEnabled()).isFalse();
     }
+
+    @Test
+    void shouldIgnoreExtraneousProperties() throws Exception {
+        FeatureToggleEvaluation result = objectMapper.readValue(
+                resource("toggle-with-extraneous-properties.json"), FeatureToggleEvaluation.class);
+
+        assertThat(result.getName()).isEqualTo("My Feature");
+        assertThat(result.getSlug()).isEqualTo("my-feature");
+        assertThat(result.isEnabled()).isTrue();
+        assertThat(result.getSegments()).isEmpty();
+    }
 }
