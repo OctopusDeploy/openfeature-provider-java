@@ -19,9 +19,9 @@ class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
                 "Expected JSON object for Segment but got: %s",
                 node
             );
+            return null;
         }
 
-        assert node != null;
         JsonNode keyNode = node.get("key");
         if (keyNode == null || keyNode.isNull() || !keyNode.isTextual()) {
             ctxt.reportInputMismatch(
@@ -29,6 +29,7 @@ class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
                 "Expected non-null string 'key' field but got: %s",
                 keyNode
             );
+            return null;
         }
 
         JsonNode valueNode = node.get("value");
@@ -38,12 +39,10 @@ class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
                 "Expected non-null string 'value' field but got: %s",
                 valueNode
             );
+            return null;
         }
 
-        assert keyNode != null;
         String key = keyNode.asText();
-
-        assert valueNode != null;
         String value = valueNode.asText();
 
         return new AbstractMap.SimpleEntry<>(key, value);
