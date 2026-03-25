@@ -1,12 +1,15 @@
 package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 class FeatureToggleEvaluation {
     private final String name;
     private final String slug;
@@ -14,12 +17,16 @@ class FeatureToggleEvaluation {
     private final List<Map.Entry<String, String>> segments;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    FeatureToggleEvaluation(@JsonProperty("name") String name, @JsonProperty("slug")String slug, @JsonProperty("isEnabled") boolean isEnabled,
-                            @JsonProperty("segments") List<Map.Entry<String, String>> segments) {
+    FeatureToggleEvaluation(
+            @JsonProperty("name") String name,
+            @JsonProperty("slug") String slug,
+            @JsonProperty("isEnabled") boolean isEnabled,
+            @JsonDeserialize(contentUsing = SegmentDeserializer.class) @JsonProperty("segments") List<Map.Entry<String, String>> segments
+    ) {
         this.name = name;
         this.slug = slug;
         this.isEnabled = isEnabled;
-        
+
         this.segments = new ArrayList<>();
         if (segments != null) {
             this.segments.addAll(segments);
