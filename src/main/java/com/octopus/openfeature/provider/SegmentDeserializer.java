@@ -21,6 +21,7 @@ class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
             );
         }
 
+        assert node != null;
         JsonNode keyNode = node.get("key");
         if (keyNode == null || keyNode.isNull() || !keyNode.isTextual()) {
             ctxt.reportInputMismatch(
@@ -39,8 +40,12 @@ class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
             );
         }
 
+        assert keyNode != null;
         String key = keyNode.asText();
+
+        assert valueNode != null;
         String value = valueNode.asText();
+
         return new AbstractMap.SimpleEntry<>(key, value);
     }
 }
