@@ -45,6 +45,6 @@ class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
         String key = keyNode.asText();
         String value = valueNode.asText();
 
-        return new AbstractMap.SimpleEntry<>(key, value);
+        return new AbstractMap.SimpleImmutableEntry<>(key, value);
     }
 }
