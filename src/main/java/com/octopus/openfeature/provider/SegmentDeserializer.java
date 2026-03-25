@@ -13,8 +13,34 @@ class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
     @Override
     public Map.Entry<String, String> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         JsonNode node = p.getCodec().readTree(p);
-        String key = node.get("key").asText();
-        String value = node.get("value").asText();
+        if (node == null || !node.isObject()) {
+            ctxt.reportInputMismatch(
+                Map.Entry.class,
+                "Expected JSON object for Segment but got: %s",
+                node
+            );
+        }
+
+        JsonNode keyNode = node.get("key");
+        if (keyNode == null || keyNode.isNull() || !keyNode.isTextual()) {
+            ctxt.reportInputMismatch(
+                Map.Entry.class,
+                "Expected non-null string 'key' field but got: %s",
+                keyNode
+            );
+        }
+
+        JsonNode valueNode = node.get("value");
+        if (valueNode == null || valueNode.isNull() || !valueNode.isTextual()) {
+            ctxt.reportInputMismatch(
+                Map.Entry.class,
+                "Expected non-null string 'value' field but got: %s",
+                valueNode
+            );
+        }
+
+        String key = keyNode.asText();
+        String value = valueNode.asText();
         return new AbstractMap.SimpleEntry<>(key, value);
     }
 }
