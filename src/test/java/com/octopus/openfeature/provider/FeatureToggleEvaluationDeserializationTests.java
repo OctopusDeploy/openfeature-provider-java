@@ -20,8 +20,7 @@ class FeatureToggleEvaluationDeserializationTests {
 
     @Test
     void shouldDeserializeEnabledToggle() throws Exception {
-        FeatureToggleEvaluation result = objectMapper.readValue(
-                resource("toggle-enabled-no-segments.json"), FeatureToggleEvaluation.class);
+        FeatureToggleEvaluation result = objectMapper.readValue(resource("toggle-enabled-no-segments.json"), FeatureToggleEvaluation.class);
 
         assertThat(result.getName()).isEqualTo("My Feature");
         assertThat(result.getSlug()).isEqualTo("my-feature");
@@ -31,16 +30,14 @@ class FeatureToggleEvaluationDeserializationTests {
 
     @Test
     void shouldDeserializeDisabledToggle() throws Exception {
-        FeatureToggleEvaluation result = objectMapper.readValue(
-                resource("toggle-disabled.json"), FeatureToggleEvaluation.class);
+        FeatureToggleEvaluation result = objectMapper.readValue(resource("toggle-disabled.json"), FeatureToggleEvaluation.class);
 
         assertThat(result.isEnabled()).isFalse();
     }
 
     @Test
     void shouldDeserializeToggleWithMissingSegmentsField() throws Exception {
-        FeatureToggleEvaluation result = objectMapper.readValue(
-                resource("toggle-missing-segments.json"), FeatureToggleEvaluation.class);
+        FeatureToggleEvaluation result = objectMapper.readValue(resource("toggle-missing-segments.json"), FeatureToggleEvaluation.class);
 
         assertThat(result.getSegments()).isNotNull().isEmpty();
     }
@@ -60,7 +57,10 @@ class FeatureToggleEvaluationDeserializationTests {
     @Test
     void shouldDeserializeListOfToggles() throws Exception {
         List<FeatureToggleEvaluation> result = objectMapper.readValue(
-                resource("toggle-list.json"), new TypeReference<List<FeatureToggleEvaluation>>() {});
+                resource("toggle-list.json"),
+                new TypeReference<>() {
+                }
+        );
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getSlug()).isEqualTo("feature-a");
@@ -77,6 +77,6 @@ class FeatureToggleEvaluationDeserializationTests {
         assertThat(result.getName()).isEqualTo("My Feature");
         assertThat(result.getSlug()).isEqualTo("my-feature");
         assertThat(result.isEnabled()).isTrue();
-        assertThat(result.getSegments()).isEmpty();
+        assertThat(result.getSegments()).contains(Map.entry("license-type", "free"));
     }
 }
