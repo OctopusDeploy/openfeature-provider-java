@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class FeatureToggleEvaluationDeserializationTests {
 
-    private final ObjectMapper objectMapper = OctopusObjectMapper.create();
+    private final ObjectMapper objectMapper = OctopusObjectMapper.INSTANCE;
 
     private InputStream resource(String name) {
         return getClass().getResourceAsStream(name);
