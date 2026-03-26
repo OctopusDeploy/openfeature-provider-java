@@ -2,12 +2,10 @@ package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.Collections;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 class FeatureToggleEvaluation {
     private final String name;
@@ -17,10 +15,10 @@ class FeatureToggleEvaluation {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     FeatureToggleEvaluation(
-            @JsonProperty("name") String name,
-            @JsonProperty("slug") String slug,
-            @JsonProperty("isEnabled") boolean isEnabled,
-            @JsonProperty("segments") List<Segment> segments
+        @JsonProperty("name") String name,
+        @JsonProperty("slug") String slug,
+        @JsonProperty("isEnabled") boolean isEnabled,
+        @JsonProperty("segments") List<Segment> segments
     ) {
         this.name = name;
         this.slug = slug;
