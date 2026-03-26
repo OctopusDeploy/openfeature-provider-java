@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.util.AbstractMap;
+import java.util.Iterator;
 import java.util.Map;
 
 class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
@@ -22,7 +23,7 @@ class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
             return null;
         }
 
-        JsonNode keyNode = node.get("key");
+        JsonNode keyNode = getIgnoreCase(node, "key");
         if (keyNode == null || keyNode.isNull() || !keyNode.isTextual()) {
             ctxt.reportInputMismatch(
                 Map.Entry.class,
@@ -32,7 +33,7 @@ class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
             return null;
         }
 
-        JsonNode valueNode = node.get("value");
+        JsonNode valueNode = getIgnoreCase(node, "value");
         if (valueNode == null || valueNode.isNull() || !valueNode.isTextual()) {
             ctxt.reportInputMismatch(
                 Map.Entry.class,
@@ -46,5 +47,16 @@ class SegmentDeserializer extends JsonDeserializer<Map.Entry<String, String>> {
         String value = valueNode.asText();
 
         return new AbstractMap.SimpleImmutableEntry<>(key, value);
+    }
+
+    private static JsonNode getIgnoreCase(JsonNode node, String fieldName) {
+        Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> field = fields.next();
+            if (field.getKey().equalsIgnoreCase(fieldName)) {
+                return field.getValue();
+            }
+        }
+        return null;
     }
 }

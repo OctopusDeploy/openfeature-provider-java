@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class FeatureToggleEvaluationDeserializationTests {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = OctopusObjectMapper.create();
 
     private InputStream resource(String name) {
         return getClass().getResourceAsStream(name);
@@ -67,6 +67,26 @@ class FeatureToggleEvaluationDeserializationTests {
         assertThat(result.get(0).isEnabled()).isTrue();
         assertThat(result.get(1).getSlug()).isEqualTo("feature-b");
         assertThat(result.get(1).isEnabled()).isFalse();
+    }
+
+    @Test
+    void shouldDeserializeListOfTogglesWithVariousFieldCasings() throws Exception {
+        List<FeatureToggleEvaluation> result = objectMapper.readValue(
+                resource("toggles-with-different-field-capitalisation.json"),
+                new TypeReference<>() {
+                }
+        );
+
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).getSlug()).isEqualTo("feature-a");
+        assertThat(result.get(0).isEnabled()).isTrue();
+        assertThat(result.get(0).getSegments()).contains(Map.entry("license-type", "free"));
+        assertThat(result.get(1).getSlug()).isEqualTo("feature-b");
+        assertThat(result.get(1).isEnabled()).isTrue();
+        assertThat(result.get(1).getSegments()).contains(Map.entry("plan", "enterprise"));
+        assertThat(result.get(2).getSlug()).isEqualTo("feature-c");
+        assertThat(result.get(2).isEnabled()).isTrue();
+        assertThat(result.get(2).getSegments()).contains(Map.entry("country", "au"));
     }
 
     @Test

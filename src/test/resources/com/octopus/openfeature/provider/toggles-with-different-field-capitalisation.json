@@ -1,0 +1,35 @@
+[
+  {
+    "NAME": "Feature A",
+    "SLUG": "feature-a",
+    "ISENABLED": true,
+    "SEGMENTS": [
+      {
+        "KEY": "license-type",
+        "VALUE": "free"
+      }
+    ]
+  },
+  {
+    "Name": "Feature B",
+    "Slug": "feature-b",
+    "IsEnabled": true,
+    "Segments": [
+      {
+        "Key": "plan",
+        "Value": "enterprise"
+      }
+    ]
+  },
+  {
+    "nAmE": "Feature C",
+    "sLuG": "feature-c",
+    "iSeNaBlEd": true,
+    "sEgMeNtS": [
+      {
+        "kEy": "country",
+        "vAlUe": "au"
+      }
+    ]
+  }
+]
