@@ -17,7 +17,7 @@ public class OctopusConfiguration {
 
     public URI getServerUri() { return serverUri; }
 
-    // Package-private: visible to tests in same package, not to library consumers.
+    // Note: package-private by default. Visible to tests in same package, but not to library consumers.
     void setServerUri(URI serverUri) { this.serverUri = serverUri; }
 
     public Duration getCacheDuration() {
