@@ -52,9 +52,9 @@ class SpecificationTests {
         OpenFeatureAPI.getInstance().shutdown();
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "[{0}] {1}")
     @MethodSource("fixtureTestCases")
-    void evaluate(String description, String responseJson, FixtureCase testCase) {
+    void evaluate(String fileName, String description, String responseJson, FixtureCase testCase) {
         String token = server.configure(responseJson);
         OctopusConfiguration config = new OctopusConfiguration(token);
         config.setServerUri(URI.create(server.baseUrl()));
@@ -71,10 +71,10 @@ class SpecificationTests {
         );
 
         assertThat(result.getValue())
-            .as(description + " → value")
+            .as("[%s] %s → value", fileName, description)
             .isEqualTo(testCase.expected.value);
         assertThat(result.getErrorCode())
-            .as(description + " → errorCode")
+            .as("[%s] %s → errorCode", fileName, description)
             .isEqualTo(mapErrorCode(testCase.expected.errorCode));
     }
 
@@ -97,8 +97,9 @@ class SpecificationTests {
             try {
                 String fileContent = Files.readString(path);
                 Fixture fixture = mapper.readValue(fileContent, Fixture.class);
+                String fileName = path.getFileName().toString();
                 return Stream.of(fixture.cases)
-                    .map(c -> Arguments.of(c.description, fixture.response, c));
+                    .map(c -> Arguments.of(fileName, c.description, fixture.response, c));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
