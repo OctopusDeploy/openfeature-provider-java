@@ -12,14 +12,14 @@ class FeatureToggleEvaluation {
     private final String name;
     private final String slug;
     private final boolean isEnabled;
-    private final List<Map.Entry<String, String>> segments;
+    private final List<Segment> segments;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     FeatureToggleEvaluation(
             @JsonProperty("name") String name,
             @JsonProperty("slug") String slug,
             @JsonProperty("isEnabled") boolean isEnabled,
-            @JsonDeserialize(contentUsing = SegmentDeserializer.class) @JsonProperty("segments") List<Map.Entry<String, String>> segments
+            @JsonProperty("segments") List<Segment> segments
     ) {
         this.name = name;
         this.slug = slug;
@@ -43,7 +43,7 @@ class FeatureToggleEvaluation {
         return isEnabled;
     }
 
-    public List<Map.Entry<String, String>> getSegments() {
+    public List<Segment> getSegments() {
         return segments;
     }
 }

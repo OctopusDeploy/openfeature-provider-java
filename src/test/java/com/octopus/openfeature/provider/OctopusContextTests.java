@@ -20,7 +20,7 @@ class OctopusContextTests {
             Arrays.asList(
                     new FeatureToggleEvaluation("Enabled Feature", "enabled-feature", true, null),
                     new FeatureToggleEvaluation("Disabled Feature", "disabled-feature", false, null),
-                    new FeatureToggleEvaluation("Feature With Segments", "feature-with-segments", true, Arrays.asList(Map.entry("license-type", "free"), Map.entry("country", "au")) )
+                    new FeatureToggleEvaluation("Feature With Segments", "feature-with-segments", true, Arrays.asList(new Segment("license-type", "free"), new Segment("country", "au")) )
             ),
             new byte[0]
     );

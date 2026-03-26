@@ -48,13 +48,13 @@ class OctopusContext {
                 .build();
     }
 
-    private Boolean MatchesSegment(EvaluationContext evaluationContext, List<Map.Entry<String, String>> segments) {
+    private Boolean MatchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
         if (evaluationContext == null) {
             return false;
         }
 
         var contextEntries = evaluationContext.asMap();
-        var groupedByKey = segments.stream().collect(groupingBy(Map.Entry::getKey));
+        var groupedByKey = segments.stream().collect(groupingBy(Segment::getKey));
         return groupedByKey.keySet().stream().allMatch(k -> {
             var values = groupedByKey.get(k);
 
