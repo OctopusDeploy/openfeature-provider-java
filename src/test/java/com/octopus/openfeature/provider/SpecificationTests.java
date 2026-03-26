@@ -1,8 +1,13 @@
 package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import dev.openfeature.sdk.Client;
 import dev.openfeature.sdk.ErrorCode;
 import dev.openfeature.sdk.EvaluationContext;
@@ -74,7 +79,9 @@ class SpecificationTests {
     }
 
     static Stream<Arguments> fixtureTestCases() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper(
+            JsonFactory.builder().enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).build()
+        );
         List<Path> jsonFiles;
         try (Stream<Path> files = Files.list(Path.of("specification", "Fixtures"))) {
             jsonFiles = files
@@ -88,10 +95,10 @@ class SpecificationTests {
         }
         return jsonFiles.stream().flatMap(path -> {
             try {
-                Fixture fixture = mapper.readValue(path.toFile(), Fixture.class);
-                String responseJson = mapper.writeValueAsString(fixture.response);
+                String fileContent = Files.readString(path);
+                Fixture fixture = mapper.readValue(fileContent, Fixture.class);
                 return Stream.of(fixture.cases)
-                    .map(c -> Arguments.of(c.description, responseJson, c));
+                    .map(c -> Arguments.of(c.description, fixture.response, c));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -125,7 +132,8 @@ class SpecificationTests {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class Fixture {
-        public JsonNode response;
+        @JsonDeserialize(using = RawJsonDeserializer.class)
+        public String response;
         public FixtureCase[] cases;
     }
 
@@ -148,4 +156,16 @@ class SpecificationTests {
         public boolean value;
         public String errorCode;
     }
+
+    static class RawJsonDeserializer extends JsonDeserializer<String> {
+        @Override
+        public String deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+            long begin = jp.currentLocation().getCharOffset();
+            jp.skipChildren();
+            long end = jp.currentLocation().getCharOffset();
+            String json = jp.currentLocation().contentReference().getRawContent().toString();
+            return json.substring((int) begin - 1, (int) end);
+        }
+    }
+
 }
