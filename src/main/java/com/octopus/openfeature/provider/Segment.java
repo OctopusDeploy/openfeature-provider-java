@@ -9,8 +9,8 @@ class Segment {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public Segment(
-        @JsonProperty("key") String key,
-        @JsonProperty("value") String value
+        @JsonProperty(value = "key", required = true) String key,
+        @JsonProperty(value = "value", required = true) String value
     ) {
         this.key = key;
         this.value = value;

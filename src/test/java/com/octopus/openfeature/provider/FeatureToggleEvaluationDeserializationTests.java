@@ -2,6 +2,7 @@ package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class FeatureToggleEvaluationDeserializationTests {
 
@@ -91,6 +93,27 @@ class FeatureToggleEvaluationDeserializationTests {
         assertThat(result.get(2).getSlug()).isEqualTo("feature-c");
         assertThat(result.get(2).isEnabled()).isTrue();
         assertSegmentsContain(result.get(2).getSegments(), new Segment("country", "au"));
+    }
+
+    @Test
+    void shouldFailDeserializationWhenSegmentKeyIsMissing() {
+        assertThatThrownBy(() -> objectMapper.readValue(
+                resource("toggle-segment-missing-key.json"), FeatureToggleEvaluation.class))
+                .isInstanceOf(MismatchedInputException.class);
+    }
+
+    @Test
+    void shouldFailDeserializationWhenSegmentValueIsMissing() {
+        assertThatThrownBy(() -> objectMapper.readValue(
+                resource("toggle-segment-missing-value.json"), FeatureToggleEvaluation.class))
+                .isInstanceOf(MismatchedInputException.class);
+    }
+
+    @Test
+    void shouldFailDeserializationWhenSegmentKeyAndValueAreMissing() {
+        assertThatThrownBy(() -> objectMapper.readValue(
+                resource("toggle-segment-missing-key-and-value.json"), FeatureToggleEvaluation.class))
+                .isInstanceOf(MismatchedInputException.class);
     }
 
     @Test

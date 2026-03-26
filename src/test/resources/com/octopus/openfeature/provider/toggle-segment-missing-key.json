@@ -1,0 +1,10 @@
+{
+  "name": "My Feature",
+  "slug": "my-feature",
+  "isEnabled": true,
+  "segments": [
+    {
+      "value": "free"
+    }
+  ]
+}
