@@ -81,6 +81,11 @@ class SpecificationTests {
                 .filter(p -> p.getFileName().toString().endsWith(".json"))
                 .collect(Collectors.toList());
         }
+        if (jsonFiles.isEmpty()) {
+            throw new IllegalStateException(
+                "No fixture files found under 'specification/Fixtures/'. " +
+                "Ensure the git submodule is initialised: git submodule update --init");
+        }
         return jsonFiles.stream().flatMap(path -> {
             try {
                 Fixture fixture = mapper.readValue(path.toFile(), Fixture.class);
