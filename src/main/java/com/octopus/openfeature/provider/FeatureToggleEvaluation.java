@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,6 @@ class FeatureToggleEvaluation {
     }
 
     public List<Segment> getSegments() {
-        return segments;
+        return Collections.unmodifiableList(segments);
     }
 }
