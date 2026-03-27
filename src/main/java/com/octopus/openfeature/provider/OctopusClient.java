@@ -36,7 +36,7 @@ class OctopusClient {
                 .build();
         try {
             HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
-            FeatureToggleCheckResponse checkResponse = new ObjectMapper().readValue(httpResponse.body(), FeatureToggleCheckResponse.class);
+            FeatureToggleCheckResponse checkResponse = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), FeatureToggleCheckResponse.class);
             return !Arrays.equals(checkResponse.contentHash, contentHash);
         } catch (Exception e) {
             logger.log(System.Logger.Level.WARNING, String.format("Unable to query Octopus Feature Toggle service. URI: %s", checkURI.toString()), e);
@@ -65,7 +65,7 @@ class OctopusClient {
                 logger.log(System.Logger.Level.WARNING,String.format("Feature toggle response from %s did not contain expected ContentHash header", manifestURI.toString()));      
                 return null;
             }
-            List<FeatureToggleEvaluation> evaluations = new ObjectMapper().readValue(httpResponse.body(), new TypeReference<List<FeatureToggleEvaluation>>(){}); 
+            List<FeatureToggleEvaluation> evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<FeatureToggleEvaluation>>(){}); 
             return new FeatureToggles(evaluations, Base64.getDecoder().decode(contentHashHeader.get()));
         } catch (Exception e) {
             logger.log(System.Logger.Level.WARNING, "Unable to query Octopus Feature Toggle service", e);

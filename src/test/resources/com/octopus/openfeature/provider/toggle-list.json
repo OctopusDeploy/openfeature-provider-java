@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Feature A",
+    "slug": "feature-a",
+    "isEnabled": true,
+    "segments": null
+  },
+  {
+    "name": "Feature B",
+    "slug": "feature-b",
+    "isEnabled": false,
+    "segments": null
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "name": "My Feature",
+  "slug": "my-feature",
+  "isEnabled": true,
+  "segments": [
+    {
+      "key": "license-type",
+      "value": "free",
+      "more": "data"
+    }
+  ],
+  "foo": "bar",
+  "qux": 123,
+  "wux": {
+    "nested": "value"
+  }
+}
