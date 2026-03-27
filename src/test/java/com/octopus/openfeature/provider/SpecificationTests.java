@@ -1,7 +1,5 @@
 package com.octopus.openfeature.provider;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -10,12 +8,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import dev.openfeature.sdk.Client;
-import dev.openfeature.sdk.ErrorCode;
-import dev.openfeature.sdk.EvaluationContext;
-import dev.openfeature.sdk.FlagEvaluationDetails;
-import dev.openfeature.sdk.MutableContext;
-import dev.openfeature.sdk.OpenFeatureAPI;
+import dev.openfeature.sdk.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
