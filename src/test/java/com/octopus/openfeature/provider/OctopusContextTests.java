@@ -4,7 +4,7 @@ import dev.openfeature.sdk.EvaluationContext;
 import dev.openfeature.sdk.MutableContext;
 import dev.openfeature.sdk.Reason;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
-import net.bytebuddy.description.annotation.AnnotationList;
+import dev.openfeature.sdk.exceptions.ParseError;
 import org.junit.jupiter.api.*;
 
 import java.util.*;
@@ -54,6 +54,46 @@ class OctopusContextTests {
         var defaultValue = false;
         var subject = new OctopusContext(sampleFeatureToggles);
         assertThrows(FlagNotFoundError.class, () -> subject.evaluate("key-not-present", defaultValue, null));
+    }
+
+    @Test
+    void shouldThrowParseErrorWhenEnabledToggleIsMissingEvaluationKey() {
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-a", true, null, Collections.emptyList(), 100)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        assertThrows(ParseError.class, () -> subject.evaluate("feature-a", false, null));
+    }
+
+    @Test
+    void shouldThrowParseErrorWhenEnabledToggleIsMissingSegments() {
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-b", true, "evaluation-key", null, 100)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        assertThrows(ParseError.class, () -> subject.evaluate("feature-b", false, null));
+    }
+
+    @Test
+    void shouldThrowParseErrorWhenEnabledToggleIsMissingClientRolloutPercentage() {
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-c", true, "evaluation-key", Collections.emptyList(), null)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        assertThrows(ParseError.class, () -> subject.evaluate("feature-c", false, null));
+    }
+
+    @Test
+    void shouldThrowParseErrorWhenEnabledToggleIsMissingAllClientEvaluationFields() {
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-d", true, null, null, null)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        assertThrows(ParseError.class, () -> subject.evaluate("feature-d", true, null));
     }
 
     @TestFactory
