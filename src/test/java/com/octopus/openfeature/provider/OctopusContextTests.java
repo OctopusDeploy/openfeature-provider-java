@@ -17,9 +17,9 @@ class OctopusContextTests {
 
     private static final FeatureToggles sampleFeatureToggles = new FeatureToggles(
             Arrays.asList(
-                    new FeatureToggleEvaluation("enabled-feature", true, Optional.of(UUID.randomUUID().toString()), Optional.of(Collections.emptyList()), Optional.of(100)),
-                    new FeatureToggleEvaluation("disabled-feature", false, Optional.empty(), Optional.empty(), Optional.empty()),
-                    new FeatureToggleEvaluation("feature-with-segments", true, Optional.of(UUID.randomUUID().toString()), Optional.of(Arrays.asList(new Segment("license-type", "free"), new Segment("country", "au"))), Optional.of(100))
+                    new FeatureToggleEvaluation("enabled-feature", true, UUID.randomUUID().toString(), Collections.emptyList(), 100),
+                    new FeatureToggleEvaluation("disabled-feature", false, null, null, null),
+                    new FeatureToggleEvaluation("feature-with-segments", true, UUID.randomUUID().toString(), Arrays.asList(new Segment("license-type", "free"), new Segment("country", "au")), 100)
             ),
             new byte[0]
     );

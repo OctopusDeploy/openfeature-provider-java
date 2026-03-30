@@ -10,17 +10,17 @@ import java.util.Optional;
 class FeatureToggleEvaluation {
     private final String slug;
     private final boolean isEnabled;
-    private final Optional<String> evaluationKey;
-    private final Optional<List<Segment>> segments;
-    private final Optional<Integer> clientRolloutPercentage;
+    private final String evaluationKey;
+    private final List<Segment> segments;
+    private final Integer clientRolloutPercentage;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     FeatureToggleEvaluation(
             @JsonProperty(value = "slug", required = true) String slug,
             @JsonProperty(value = "isEnabled", required = true) boolean isEnabled,
-            @JsonProperty("evaluationKey") Optional<String> evaluationKey,
-            @JsonProperty("segments") Optional<List<Segment>> segments,
-            @JsonProperty("clientRolloutPercentage") Optional<Integer> clientRolloutPercentage
+            @JsonProperty("evaluationKey") String evaluationKey,
+            @JsonProperty("segments") List<Segment> segments,
+            @JsonProperty("clientRolloutPercentage") Integer clientRolloutPercentage
     ) {
         this.slug = slug;
         this.isEnabled = isEnabled;
@@ -39,18 +39,18 @@ class FeatureToggleEvaluation {
     }
 
     public Optional<String> getEvaluationKey() {
-        return evaluationKey;
+        return Optional.ofNullable(evaluationKey);
     }
 
     public Optional<List<Segment>> getSegments() {
-        return segments.map(Collections::unmodifiableList);
+        return segments == null ? Optional.empty() : Optional.of(Collections.unmodifiableList(segments));
     }
 
     public boolean hasSegments() {
-        return segments != null && segments.isPresent() && !segments.get().isEmpty();
+        return segments != null && !segments.isEmpty();
     }
 
     public Optional<Integer> getClientRolloutPercentage() {
-        return clientRolloutPercentage;
+        return Optional.ofNullable(clientRolloutPercentage);
     }
 }
