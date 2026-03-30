@@ -63,7 +63,8 @@ class OctopusContextTests {
                 new byte[0]
         );
         var subject = new OctopusContext(toggles);
-        assertThrows(ParseError.class, () -> subject.evaluate("feature-a", false, null));
+        var ex = assertThrows(ParseError.class, () -> subject.evaluate("feature-a", false, null));
+        assertThat(ex.getMessage()).contains("feature-a");
     }
 
     @Test
@@ -73,7 +74,8 @@ class OctopusContextTests {
                 new byte[0]
         );
         var subject = new OctopusContext(toggles);
-        assertThrows(ParseError.class, () -> subject.evaluate("feature-b", false, null));
+        var ex = assertThrows(ParseError.class, () -> subject.evaluate("feature-b", false, null));
+        assertThat(ex.getMessage()).contains("feature-b");
     }
 
     @Test
@@ -83,7 +85,8 @@ class OctopusContextTests {
                 new byte[0]
         );
         var subject = new OctopusContext(toggles);
-        assertThrows(ParseError.class, () -> subject.evaluate("feature-c", false, null));
+        var ex = assertThrows(ParseError.class, () -> subject.evaluate("feature-c", false, null));
+        assertThat(ex.getMessage()).contains("feature-c");
     }
 
     @Test
@@ -93,7 +96,8 @@ class OctopusContextTests {
                 new byte[0]
         );
         var subject = new OctopusContext(toggles);
-        assertThrows(ParseError.class, () -> subject.evaluate("feature-d", true, null));
+        var ex = assertThrows(ParseError.class, () -> subject.evaluate("feature-d", true, null));
+        assertThat(ex.getMessage()).contains("feature-d");
     }
 
     @TestFactory

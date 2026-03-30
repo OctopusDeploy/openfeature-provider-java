@@ -42,7 +42,7 @@ class FeatureToggleEvaluation {
     }
 
     public Optional<List<Segment>> getSegments() {
-        return segments == null ? Optional.empty() : Optional.of(segments);
+        return Optional.ofNullable(segments);
     }
 
     public boolean hasSegments() {
