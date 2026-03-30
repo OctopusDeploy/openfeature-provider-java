@@ -1,10 +1,11 @@
 {
-  "name": "My Feature",
   "slug": "my-feature",
   "isEnabled": true,
+  "evaluationKey": "eval-key-1",
   "segments": [
     {
       "key": "license-type"
     }
-  ]
+  ],
+  "clientRolloutPercentage": 100
 }

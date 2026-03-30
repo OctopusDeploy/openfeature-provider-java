@@ -1,6 +1,4 @@
 {
-  "name": "My Feature",
   "slug": "my-feature",
-  "isEnabled": false,
-  "segments": null
+  "isEnabled": false
 }

@@ -30,7 +30,10 @@ class FeatureToggleEvaluationDeserializationTests {
 
         assertThat(result.getSlug()).isEqualTo("my-feature");
         assertThat(result.isEnabled()).isTrue();
-        assertThat(result.getSegments()).isEmpty();
+        assertThat(result.getEvaluationKey()).hasValue("eval-key-1");
+        assertThat(result.getSegments()).isPresent();
+        assertThat(result.getSegments().orElseThrow()).isEmpty();
+        assertThat(result.getClientRolloutPercentage()).hasValue(100);
     }
 
     @Test
@@ -38,13 +41,16 @@ class FeatureToggleEvaluationDeserializationTests {
         FeatureToggleEvaluation result = objectMapper.readValue(resource("toggle-disabled.json"), FeatureToggleEvaluation.class);
 
         assertThat(result.isEnabled()).isFalse();
+        assertThat(result.getEvaluationKey()).isEmpty();
+        assertThat(result.getSegments()).isEmpty();
+        assertThat(result.getClientRolloutPercentage()).isEmpty();
     }
 
     @Test
     void shouldDeserializeToggleWithMissingSegmentsField() throws Exception {
         FeatureToggleEvaluation result = objectMapper.readValue(resource("toggle-missing-segments.json"), FeatureToggleEvaluation.class);
 
-        assertThat(result.getSegments()).isNotNull().isEmpty();
+        assertThat(result.getSegments()).isEmpty();
     }
 
     @Test

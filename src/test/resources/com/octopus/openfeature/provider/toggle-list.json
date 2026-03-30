@@ -1,14 +1,13 @@
 [
   {
-    "name": "Feature A",
     "slug": "feature-a",
     "isEnabled": true,
-    "segments": null
+    "evaluationKey": "eval-key-a",
+    "segments": [],
+    "clientRolloutPercentage": 100
   },
   {
-    "name": "Feature B",
     "slug": "feature-b",
-    "isEnabled": false,
-    "segments": null
+    "isEnabled": false
   }
 ]
