@@ -38,11 +38,19 @@ class FeatureToggleEvaluation {
         return isEnabled;
     }
 
+    public Optional<String> getEvaluationKey() {
+        return evaluationKey;
+    }
+
     public Optional<List<Segment>> getSegments() {
         return segments.map(Collections::unmodifiableList);
     }
 
     public boolean hasSegments() {
         return segments != null && segments.isPresent() && !segments.get().isEmpty();
+    }
+
+    public Optional<Integer> getClientRolloutPercentage() {
+        return clientRolloutPercentage;
     }
 }

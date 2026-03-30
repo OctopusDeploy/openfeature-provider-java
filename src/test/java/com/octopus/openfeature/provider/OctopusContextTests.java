@@ -4,24 +4,22 @@ import dev.openfeature.sdk.EvaluationContext;
 import dev.openfeature.sdk.MutableContext;
 import dev.openfeature.sdk.Reason;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
+import net.bytebuddy.description.annotation.AnnotationList;
 import org.junit.jupiter.api.*;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 class OctopusContextTests {
-    
+
     private static final FeatureToggles sampleFeatureToggles = new FeatureToggles(
             Arrays.asList(
-                    new FeatureToggleEvaluation("enabled-feature", true, null, null, null),
-                    new FeatureToggleEvaluation( "disabled-feature", false, null, null, null),
-                    new FeatureToggleEvaluation( "feature-with-segments", true, null, Optional.of(Arrays.asList(new Segment("license-type", "free"), new Segment("country", "au"))), null)
+                    new FeatureToggleEvaluation("enabled-feature", true, Optional.of(UUID.randomUUID().toString()), Optional.of(Collections.emptyList()), Optional.of(100)),
+                    new FeatureToggleEvaluation("disabled-feature", false, Optional.empty(), Optional.empty(), Optional.empty()),
+                    new FeatureToggleEvaluation("feature-with-segments", true, Optional.of(UUID.randomUUID().toString()), Optional.of(Arrays.asList(new Segment("license-type", "free"), new Segment("country", "au"))), Optional.of(100))
             ),
             new byte[0]
     );
@@ -30,11 +28,11 @@ class OctopusContextTests {
     @Test
     void shouldEvaluateToTrueIfFeatureToggleIsPresentAndEnabled() {
         var subject = new OctopusContext(sampleFeatureToggles);
-        var result = subject.evaluate("enabled-feature", false, null); 
-        
+        var result = subject.evaluate("enabled-feature", false, null);
+
         assertThat(result.getValue()).isTrue();
     }
-    
+
     @Test
     void keyShouldBeCaseInsensitiveWhenEvaluating() {
         var subject = new OctopusContext(sampleFeatureToggles);
@@ -42,27 +40,27 @@ class OctopusContextTests {
 
         assertThat(result.getValue()).isTrue();
     }
-    
+
     @Test
     void shouldEvaluateToFalseIfFeatureToggleIsPresentAndDisabled() {
         var subject = new OctopusContext(sampleFeatureToggles);
-        var result = subject.evaluate("disabled-feature", false, null); 
-        
+        var result = subject.evaluate("disabled-feature", false, null);
+
         assertThat(result.getValue()).isFalse();
     }
-    
+
     @Test
     void shouldThrowFlagNotFoundErrorIfFeatureToggleIsNotFound() {
         var defaultValue = false;
         var subject = new OctopusContext(sampleFeatureToggles);
         assertThrows(FlagNotFoundError.class, () -> subject.evaluate("key-not-present", defaultValue, null));
-    } 
-    
+    }
+
     @TestFactory
     Iterable<DynamicTest> shouldCorrectlyDynamicallyEvaluateSegmentsWhenSupplied() {
         return Arrays.asList(
-                
-                evaluationTest("no-segments", "enabled-feature", 
+
+                evaluationTest("no-segments", "enabled-feature",
                         buildEvaluationContext(List.of(
                                 Map.entry("user-id", "123456")
                         )), true, Reason.DEFAULT.toString()),
@@ -71,7 +69,7 @@ class OctopusContextTests {
                         buildEvaluationContext(List.of()
                         ), false, Reason.TARGETING_MATCH.toString()),
 
-                evaluationTest("all-segments-match", "feature-with-segments", 
+                evaluationTest("all-segments-match", "feature-with-segments",
                         buildEvaluationContext(Arrays.asList(
                                 Map.entry("license-type", "free"), Map.entry("country", "au"))
                         ), true, Reason.TARGETING_MATCH.toString()),
@@ -92,23 +90,23 @@ class OctopusContextTests {
                         ), false, Reason.TARGETING_MATCH.toString())
         );
     }
-    
-    private DynamicTest evaluationTest(String testName, String featureToggleKey, EvaluationContext evaluationContext, 
+
+    private DynamicTest evaluationTest(String testName, String featureToggleKey, EvaluationContext evaluationContext,
                                        boolean expectedResult, String expectedReason) {
-       return DynamicTest.dynamicTest(testName, () -> {
-           var subject = new OctopusContext(sampleFeatureToggles);
-           var result = subject.evaluate(featureToggleKey, false, evaluationContext); 
-           assertThat(result.getValue()).isEqualTo(expectedResult);
-           assertThat(result.getReason()).isEqualTo(expectedReason);
-       }); 
+        return DynamicTest.dynamicTest(testName, () -> {
+            var subject = new OctopusContext(sampleFeatureToggles);
+            var result = subject.evaluate(featureToggleKey, false, evaluationContext);
+            assertThat(result.getValue()).isEqualTo(expectedResult);
+            assertThat(result.getReason()).isEqualTo(expectedReason);
+        });
     }
-    
+
     private EvaluationContext buildEvaluationContext(List<Map.Entry<String, String>> entries) {
         var context = new MutableContext();
         entries.forEach(entry -> {
             context.add(entry.getKey(), entry.getValue());
         });
         return context;
-    } 
-    
+    }
+
 }

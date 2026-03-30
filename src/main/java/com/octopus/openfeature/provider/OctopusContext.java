@@ -19,8 +19,10 @@ class OctopusContext {
     static OctopusContext empty() {
         return new OctopusContext(new FeatureToggles(List.of(), new byte[0]));
     }
-    
-    byte[] getContentHash() { return featureToggles.getContentHash(); }
+
+    byte[] getContentHash() {
+        return featureToggles.getContentHash();
+    }
 
     ProviderEvaluation<Boolean> evaluate(String slug, Boolean defaultValue, EvaluationContext evaluationContext) {
         // find the feature toggle matching the slug
@@ -28,23 +30,41 @@ class OctopusContext {
 
         // this exception will be handled by OpenFeature, and the default value will be used
         if (toggleValue == null) {
-           throw new FlagNotFoundError(); 
+            throw new FlagNotFoundError();
         }
 
-        // if the toggle is disabled, or if it has no segments, then we don't need to evaluate dynamically 
+        if (missingRequiredPropertiesForClientSideEvaluation(toggleValue)) {
+            return ProviderEvaluation.<Boolean>builder()
+                    .value(defaultValue)
+                    .errorCode(ErrorCode.PARSE_ERROR)
+                    .errorMessage("Feature toggle " + toggleValue.getSlug() + " is missing necessary information for client-side evaluation.")
+                    .build();
+        }
+
+        // if the toggle is disabled, or if it has no segments, then we don't need to evaluate dynamically
         if (!toggleValue.isEnabled() || !toggleValue.hasSegments()) {
             return ProviderEvaluation.<Boolean>builder()
                     .value(toggleValue.isEnabled())
                     .reason(Reason.DEFAULT.toString())
                     .build();
         }
-        
-        // If the toggle is enabled and has segments configured, then we need to evaluate dynamically, 
+
+        // If the toggle is enabled and has segments configured, then we need to evaluate dynamically,
         // checking the context matches the segments
         return ProviderEvaluation.<Boolean>builder()
                 .value(matchesSegment(evaluationContext, toggleValue.getSegments().orElseThrow())) // checked in hasSegments
                 .reason(Reason.TARGETING_MATCH.toString())
                 .build();
+    }
+
+    private boolean missingRequiredPropertiesForClientSideEvaluation(FeatureToggleEvaluation toggle) {
+        if (!toggle.isEnabled()) {
+            return false;
+        }
+
+        return toggle.getClientRolloutPercentage().isEmpty()
+                || toggle.getEvaluationKey().isEmpty()
+                || toggle.getSegments().isEmpty();
     }
 
     private Boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
