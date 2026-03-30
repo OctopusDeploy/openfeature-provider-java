@@ -83,7 +83,7 @@ class OctopusClient {
     
     private URI getManifestURI() {
         try {
-            return new URL(config.getServerUri().toURL(), "/api/featuretoggles/v3/").toURI();
+            return new URL(config.getServerUri().toURL(), "/api/toggles/evaluations/v3/").toURI();
         } catch (MalformedURLException | URISyntaxException ignored) // we know this URL is well-formed
         { }
         return null;
