@@ -20,8 +20,8 @@ class FeatureToggleEvaluationDeserializationTests {
         return getClass().getResourceAsStream(name);
     }
 
-    private void assertSegmentsContain(Optional<List<Segment>> segments, Segment expected) {
-        assertThat(segments.orElseThrow()).usingRecursiveFieldByFieldElementComparator().contains(expected);
+    private void assertSegmentsContain(List<Segment> segments, Segment... expected) {
+        assertThat(segments).usingRecursiveFieldByFieldElementComparator().contains(expected);
     }
 
     @Test
@@ -52,10 +52,13 @@ class FeatureToggleEvaluationDeserializationTests {
         FeatureToggleEvaluation result = objectMapper.readValue(
                 resource("toggle-with-segments.json"), FeatureToggleEvaluation.class);
 
-        assertThat(result.getSegments().orElseThrow()).hasSize(2);
+        var segments = result.getSegments().orElseThrow();
+
+        assertThat(segments).hasSize(2);
         assertSegmentsContain(
-                result.getSegments(),
-                new Segment("license-type", "free")
+                segments,
+                new Segment("license-type", "free"),
+                new Segment("country", "au")
         );
     }
 
@@ -85,13 +88,13 @@ class FeatureToggleEvaluationDeserializationTests {
         assertThat(result).hasSize(3);
         assertThat(result.get(0).getSlug()).isEqualTo("feature-a");
         assertThat(result.get(0).isEnabled()).isTrue();
-        assertSegmentsContain(result.get(0).getSegments(), new Segment("license-type", "free"));
+        assertSegmentsContain(result.get(0).getSegments().orElseThrow(), new Segment("license-type", "free"));
         assertThat(result.get(1).getSlug()).isEqualTo("feature-b");
         assertThat(result.get(1).isEnabled()).isTrue();
-        assertSegmentsContain(result.get(1).getSegments(), new Segment("plan", "enterprise"));
+        assertSegmentsContain(result.get(1).getSegments().orElseThrow(), new Segment("plan", "enterprise"));
         assertThat(result.get(2).getSlug()).isEqualTo("feature-c");
         assertThat(result.get(2).isEnabled()).isTrue();
-        assertSegmentsContain(result.get(2).getSegments(), new Segment("country", "au"));
+        assertSegmentsContain(result.get(2).getSegments().orElseThrow(), new Segment("country", "au"));
     }
 
     @Test
@@ -122,6 +125,6 @@ class FeatureToggleEvaluationDeserializationTests {
 
         assertThat(result.getSlug()).isEqualTo("my-feature");
         assertThat(result.isEnabled()).isTrue();
-        assertSegmentsContain(result.getSegments(), new Segment("license-type", "free"));
+        assertSegmentsContain(result.getSegments().orElseThrow(), new Segment("license-type", "free"));
     }
 }

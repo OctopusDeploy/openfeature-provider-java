@@ -3,7 +3,6 @@ package com.octopus.openfeature.provider;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +25,7 @@ class FeatureToggleEvaluation {
         this.isEnabled = isEnabled;
 
         this.evaluationKey = evaluationKey;
-        this.segments = segments;
+        this.segments = segments == null ? null : List.copyOf(segments);
         this.clientRolloutPercentage = clientRolloutPercentage;
     }
 
@@ -43,7 +42,7 @@ class FeatureToggleEvaluation {
     }
 
     public Optional<List<Segment>> getSegments() {
-        return segments == null ? Optional.empty() : Optional.of(Collections.unmodifiableList(segments));
+        return segments == null ? Optional.empty() : Optional.of(segments);
     }
 
     public boolean hasSegments() {
