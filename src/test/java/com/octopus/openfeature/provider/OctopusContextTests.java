@@ -9,6 +9,7 @@ import org.junit.jupiter.api.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -18,9 +19,9 @@ class OctopusContextTests {
     
     private static final FeatureToggles sampleFeatureToggles = new FeatureToggles(
             Arrays.asList(
-                    new FeatureToggleEvaluation("Enabled Feature", "enabled-feature", true, null),
-                    new FeatureToggleEvaluation("Disabled Feature", "disabled-feature", false, null),
-                    new FeatureToggleEvaluation("Feature With Segments", "feature-with-segments", true, Arrays.asList(new Segment("license-type", "free"), new Segment("country", "au")) )
+                    new FeatureToggleEvaluation("enabled-feature", true, null, null, null),
+                    new FeatureToggleEvaluation( "disabled-feature", false, null, null, null),
+                    new FeatureToggleEvaluation( "feature-with-segments", true, null, Optional.of(Arrays.asList(new Segment("license-type", "free"), new Segment("country", "au"))), null)
             ),
             new byte[0]
     );

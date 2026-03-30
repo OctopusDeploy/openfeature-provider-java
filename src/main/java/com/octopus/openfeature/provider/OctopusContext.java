@@ -4,7 +4,6 @@ import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 
 import java.util.List;
-import java.util.Map;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -31,9 +30,9 @@ class OctopusContext {
         if (toggleValue == null) {
            throw new FlagNotFoundError(); 
         }
-        
+
         // if the toggle is disabled, or if it has no segments, then we don't need to evaluate dynamically 
-        if (!toggleValue.isEnabled() || toggleValue.getSegments().isEmpty()) {
+        if (!toggleValue.isEnabled() || !toggleValue.hasSegments()) {
             return ProviderEvaluation.<Boolean>builder()
                     .value(toggleValue.isEnabled())
                     .reason(Reason.DEFAULT.toString())
@@ -43,12 +42,12 @@ class OctopusContext {
         // If the toggle is enabled and has segments configured, then we need to evaluate dynamically, 
         // checking the context matches the segments
         return ProviderEvaluation.<Boolean>builder()
-                .value(MatchesSegment(evaluationContext, toggleValue.getSegments()))
+                .value(matchesSegment(evaluationContext, toggleValue.getSegments().orElseThrow())) // checked in hasSegments
                 .reason(Reason.TARGETING_MATCH.toString())
                 .build();
     }
 
-    private Boolean MatchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
+    private Boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
         if (evaluationContext == null) {
             return false;
         }

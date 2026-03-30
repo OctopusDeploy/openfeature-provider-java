@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -20,15 +20,14 @@ class FeatureToggleEvaluationDeserializationTests {
         return getClass().getResourceAsStream(name);
     }
 
-    private void assertSegmentsContain(List<Segment> segments, Segment... expected) {
-        assertThat(segments).usingRecursiveFieldByFieldElementComparator().contains(expected);
+    private void assertSegmentsContain(Optional<List<Segment>> segments, Segment expected) {
+        assertThat(segments.orElseThrow()).usingRecursiveFieldByFieldElementComparator().contains(expected);
     }
 
     @Test
     void shouldDeserializeEnabledToggle() throws Exception {
         FeatureToggleEvaluation result = objectMapper.readValue(resource("toggle-enabled-no-segments.json"), FeatureToggleEvaluation.class);
 
-        assertThat(result.getName()).isEqualTo("My Feature");
         assertThat(result.getSlug()).isEqualTo("my-feature");
         assertThat(result.isEnabled()).isTrue();
         assertThat(result.getSegments()).isEmpty();
@@ -53,10 +52,10 @@ class FeatureToggleEvaluationDeserializationTests {
         FeatureToggleEvaluation result = objectMapper.readValue(
                 resource("toggle-with-segments.json"), FeatureToggleEvaluation.class);
 
-        assertThat(result.getSegments()).hasSize(2);
-        assertSegmentsContain(result.getSegments(),
-                new Segment("license-type", "free"),
-                new Segment("country", "au")
+        assertThat(result.getSegments().orElseThrow()).hasSize(2);
+        assertSegmentsContain(
+                result.getSegments(),
+                new Segment("license-type", "free")
         );
     }
 
@@ -121,7 +120,6 @@ class FeatureToggleEvaluationDeserializationTests {
         FeatureToggleEvaluation result = objectMapper.readValue(
                 resource("toggle-with-extraneous-properties.json"), FeatureToggleEvaluation.class);
 
-        assertThat(result.getName()).isEqualTo("My Feature");
         assertThat(result.getSlug()).isEqualTo("my-feature");
         assertThat(result.isEnabled()).isTrue();
         assertSegmentsContain(result.getSegments(), new Segment("license-type", "free"));

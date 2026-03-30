@@ -4,34 +4,30 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Collections;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 class FeatureToggleEvaluation {
-    private final String name;
     private final String slug;
     private final boolean isEnabled;
-    private final List<Segment> segments;
+    private final Optional<String> evaluationKey;
+    private final Optional<List<Segment>> segments;
+    private final Optional<Integer> clientRolloutPercentage;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     FeatureToggleEvaluation(
-        @JsonProperty("name") String name,
-        @JsonProperty("slug") String slug,
-        @JsonProperty("isEnabled") boolean isEnabled,
-        @JsonProperty("segments") List<Segment> segments
+            @JsonProperty(value = "slug", required = true) String slug,
+            @JsonProperty(value = "isEnabled", required = true) boolean isEnabled,
+            @JsonProperty("evaluationKey") Optional<String> evaluationKey,
+            @JsonProperty("segments") Optional<List<Segment>> segments,
+            @JsonProperty("clientRolloutPercentage") Optional<Integer> clientRolloutPercentage
     ) {
-        this.name = name;
         this.slug = slug;
         this.isEnabled = isEnabled;
 
-        this.segments = new ArrayList<>();
-        if (segments != null) {
-            this.segments.addAll(segments);
-        }
-    }
-
-    public String getName() {
-        return name;
+        this.evaluationKey = evaluationKey;
+        this.segments = segments;
+        this.clientRolloutPercentage = clientRolloutPercentage;
     }
 
     public String getSlug() {
@@ -42,7 +38,11 @@ class FeatureToggleEvaluation {
         return isEnabled;
     }
 
-    public List<Segment> getSegments() {
-        return Collections.unmodifiableList(segments);
+    public Optional<List<Segment>> getSegments() {
+        return segments.map(Collections::unmodifiableList);
+    }
+
+    public boolean hasSegments() {
+        return segments != null && segments.isPresent() && !segments.get().isEmpty();
     }
 }
