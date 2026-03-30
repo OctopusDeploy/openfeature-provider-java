@@ -2,6 +2,7 @@ package com.octopus.openfeature.provider;
 
 import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
+import dev.openfeature.sdk.exceptions.ParseError;
 
 import java.util.List;
 
@@ -34,11 +35,7 @@ class OctopusContext {
         }
 
         if (missingRequiredPropertiesForClientSideEvaluation(toggleValue)) {
-            return ProviderEvaluation.<Boolean>builder()
-                    .value(defaultValue)
-                    .errorCode(ErrorCode.PARSE_ERROR)
-                    .errorMessage("Feature toggle " + toggleValue.getSlug() + " is missing necessary information for client-side evaluation.")
-                    .build();
+            throw new ParseError("Feature toggle " + toggleValue.getSlug() + " is missing necessary information for client-side evaluation.");
         }
 
         // if the toggle is disabled, or if it has no segments, then we don't need to evaluate dynamically
@@ -57,14 +54,14 @@ class OctopusContext {
                 .build();
     }
 
-    private boolean missingRequiredPropertiesForClientSideEvaluation(FeatureToggleEvaluation toggle) {
-        if (!toggle.isEnabled()) {
+    private boolean missingRequiredPropertiesForClientSideEvaluation(FeatureToggleEvaluation evaluation) {
+        if (!evaluation.isEnabled()) {
             return false;
         }
 
-        return toggle.getClientRolloutPercentage().isEmpty()
-                || toggle.getEvaluationKey().isEmpty()
-                || toggle.getSegments().isEmpty();
+        return evaluation.getClientRolloutPercentage().isEmpty()
+                || evaluation.getEvaluationKey().isEmpty()
+                || evaluation.getSegments().isEmpty();
     }
 
     private Boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
