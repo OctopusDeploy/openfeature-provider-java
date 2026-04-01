@@ -1,7 +1,6 @@
 package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -65,7 +64,7 @@ class OctopusClient {
                 logger.log(System.Logger.Level.WARNING,String.format("Feature toggle response from %s did not contain expected ContentHash header", manifestURI.toString()));      
                 return null;
             }
-            List<FeatureToggleEvaluation> evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<FeatureToggleEvaluation>>(){}); 
+            List<FeatureToggleEvaluation> evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<>(){});
             return new FeatureToggles(evaluations, Base64.getDecoder().decode(contentHashHeader.get()));
         } catch (Exception e) {
             logger.log(System.Logger.Level.WARNING, "Unable to query Octopus Feature Toggle service", e);
@@ -83,16 +82,12 @@ class OctopusClient {
     
     private URI getManifestURI() {
         try {
-            return new URL(config.getServerUri().toURL(), "/api/featuretoggles/v3/").toURI();
+            return new URL(config.getServerUri().toURL(), "/api/toggles/evaluations/v3/").toURI();
         } catch (MalformedURLException | URISyntaxException ignored) // we know this URL is well-formed
         { }
         return null;
     }
     
-    private Boolean isSuccessStatusCode(int statusCode) {
-        return statusCode >= 200 && statusCode < 300;
-    }
-
     // This class needs to be static to allow deserialization
     private static class FeatureToggleCheckResponse {
        public byte[] contentHash;

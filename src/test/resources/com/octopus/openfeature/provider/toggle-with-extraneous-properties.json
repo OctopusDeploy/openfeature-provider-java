@@ -1,7 +1,7 @@
 {
-  "name": "My Feature",
   "slug": "my-feature",
   "isEnabled": true,
+  "evaluationKey": "eval-key-1",
   "segments": [
     {
       "key": "license-type",
@@ -9,6 +9,7 @@
       "more": "data"
     }
   ],
+  "clientRolloutPercentage": 100,
   "foo": "bar",
   "qux": 123,
   "wux": {

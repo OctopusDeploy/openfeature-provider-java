@@ -1,8 +1,9 @@
 {
-  "name": "My Feature",
   "slug": "my-feature",
   "isEnabled": true,
+  "evaluationKey": "eval-key-1",
   "segments": [
     {}
-  ]
+  ],
+  "clientRolloutPercentage": 100
 }

@@ -42,7 +42,7 @@ class Server {
      */
     String configure(String responseJson) {
         String token = UUID.randomUUID().toString();
-        wireMock.stubFor(get(urlPathEqualTo("/api/featuretoggles/v3/"))
+        wireMock.stubFor(get(urlPathEqualTo("/api/toggles/evaluations/v3/"))
             .withHeader("Authorization", equalTo("Bearer " + token))
             .willReturn(aResponse()
                 .withStatus(200)

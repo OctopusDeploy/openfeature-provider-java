@@ -1,35 +1,38 @@
 [
   {
-    "NAME": "Feature A",
     "SLUG": "feature-a",
     "ISENABLED": true,
+    "EVALUATIONKEY": "eval-key-a",
     "SEGMENTS": [
       {
         "KEY": "license-type",
         "VALUE": "free"
       }
-    ]
+    ],
+    "CLIENTROLLOUTPERCENTAGE": 100
   },
   {
-    "Name": "Feature B",
     "Slug": "feature-b",
     "IsEnabled": true,
+    "EvaluationKey": "eval-key-b",
     "Segments": [
       {
         "Key": "plan",
         "Value": "enterprise"
       }
-    ]
+    ],
+    "ClientRolloutPercentage": 100
   },
   {
-    "nAmE": "Feature C",
     "sLuG": "feature-c",
     "iSeNaBlEd": true,
+    "eVaLuAtIoNkEy": "eval-key-c",
     "sEgMeNtS": [
       {
         "kEy": "country",
         "vAlUe": "au"
       }
-    ]
+    ],
+    "cLiEnTrOlLoUtPeRcEnTaGe": 100
   }
 ]

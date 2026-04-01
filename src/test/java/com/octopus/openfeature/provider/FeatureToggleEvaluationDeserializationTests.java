@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,10 +28,12 @@ class FeatureToggleEvaluationDeserializationTests {
     void shouldDeserializeEnabledToggle() throws Exception {
         FeatureToggleEvaluation result = objectMapper.readValue(resource("toggle-enabled-no-segments.json"), FeatureToggleEvaluation.class);
 
-        assertThat(result.getName()).isEqualTo("My Feature");
         assertThat(result.getSlug()).isEqualTo("my-feature");
         assertThat(result.isEnabled()).isTrue();
-        assertThat(result.getSegments()).isEmpty();
+        assertThat(result.getEvaluationKey()).hasValue("eval-key-1");
+        assertThat(result.getSegments()).isPresent();
+        assertThat(result.getSegments().orElseThrow()).isEmpty();
+        assertThat(result.getClientRolloutPercentage()).hasValue(100);
     }
 
     @Test
@@ -39,13 +41,16 @@ class FeatureToggleEvaluationDeserializationTests {
         FeatureToggleEvaluation result = objectMapper.readValue(resource("toggle-disabled.json"), FeatureToggleEvaluation.class);
 
         assertThat(result.isEnabled()).isFalse();
+        assertThat(result.getEvaluationKey()).isEmpty();
+        assertThat(result.getSegments()).isEmpty();
+        assertThat(result.getClientRolloutPercentage()).isEmpty();
     }
 
     @Test
     void shouldDeserializeToggleWithMissingSegmentsField() throws Exception {
         FeatureToggleEvaluation result = objectMapper.readValue(resource("toggle-missing-segments.json"), FeatureToggleEvaluation.class);
 
-        assertThat(result.getSegments()).isNotNull().isEmpty();
+        assertThat(result.getSegments()).isEmpty();
     }
 
     @Test
@@ -53,8 +58,11 @@ class FeatureToggleEvaluationDeserializationTests {
         FeatureToggleEvaluation result = objectMapper.readValue(
                 resource("toggle-with-segments.json"), FeatureToggleEvaluation.class);
 
-        assertThat(result.getSegments()).hasSize(2);
-        assertSegmentsContain(result.getSegments(),
+        var segments = result.getSegments().orElseThrow();
+
+        assertThat(segments).hasSize(2);
+        assertSegmentsContain(
+                segments,
                 new Segment("license-type", "free"),
                 new Segment("country", "au")
         );
@@ -86,13 +94,13 @@ class FeatureToggleEvaluationDeserializationTests {
         assertThat(result).hasSize(3);
         assertThat(result.get(0).getSlug()).isEqualTo("feature-a");
         assertThat(result.get(0).isEnabled()).isTrue();
-        assertSegmentsContain(result.get(0).getSegments(), new Segment("license-type", "free"));
+        assertSegmentsContain(result.get(0).getSegments().orElseThrow(), new Segment("license-type", "free"));
         assertThat(result.get(1).getSlug()).isEqualTo("feature-b");
         assertThat(result.get(1).isEnabled()).isTrue();
-        assertSegmentsContain(result.get(1).getSegments(), new Segment("plan", "enterprise"));
+        assertSegmentsContain(result.get(1).getSegments().orElseThrow(), new Segment("plan", "enterprise"));
         assertThat(result.get(2).getSlug()).isEqualTo("feature-c");
         assertThat(result.get(2).isEnabled()).isTrue();
-        assertSegmentsContain(result.get(2).getSegments(), new Segment("country", "au"));
+        assertSegmentsContain(result.get(2).getSegments().orElseThrow(), new Segment("country", "au"));
     }
 
     @Test
@@ -121,9 +129,8 @@ class FeatureToggleEvaluationDeserializationTests {
         FeatureToggleEvaluation result = objectMapper.readValue(
                 resource("toggle-with-extraneous-properties.json"), FeatureToggleEvaluation.class);
 
-        assertThat(result.getName()).isEqualTo("My Feature");
         assertThat(result.getSlug()).isEqualTo("my-feature");
         assertThat(result.isEnabled()).isTrue();
-        assertSegmentsContain(result.getSegments(), new Segment("license-type", "free"));
+        assertSegmentsContain(result.getSegments().orElseThrow(), new Segment("license-type", "free"));
     }
 }
