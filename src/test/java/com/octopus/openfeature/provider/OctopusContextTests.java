@@ -100,6 +100,120 @@ class OctopusContextTests {
         assertThat(ex.getMessage()).contains("feature-d");
     }
 
+    @Test
+    void whenTargetingKeyHashesToBucketWithinRolloutPercentage_evaluatesToTrue() {
+        // "evaluation-key:targeting-key" is known to hash to bucket 13
+        // rollout=13 → bucket(13) <= rollout(13) → within → true
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-x", true, "evaluation-key", Collections.emptyList(), 13)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        var ctx = new MutableContext();
+        ctx.setTargetingKey("targeting-key");
+        assertThat(subject.evaluate("feature-x", false, ctx).getValue()).isTrue();
+    }
+
+    @Test
+    void whenTargetingKeyHashesToBucketOutsideRolloutPercentage_evaluatesToFalse() {
+        // "evaluation-key:targeting-key" is known to hash to bucket 13
+        // rollout=12 → bucket(13) > rollout(12) → outside → false
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-x", true, "evaluation-key", Collections.emptyList(), 12)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        var ctx = new MutableContext();
+        ctx.setTargetingKey("targeting-key");
+        assertThat(subject.evaluate("feature-x", false, ctx).getValue()).isFalse();
+    }
+
+    @Test
+    void whenNoTargetingKeyAndRolloutLessThan100_evaluatesToFalse() {
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-x", true, "evaluation-key", Collections.emptyList(), 99)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        assertThat(subject.evaluate("feature-x", false, new MutableContext()).getValue()).isFalse();
+    }
+
+    @Test
+    void whenNoTargetingKeyAndRolloutIs100_evaluatesToTrue() {
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-x", true, "evaluation-key", Collections.emptyList(), 100)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        assertThat(subject.evaluate("feature-x", false, new MutableContext()).getValue()).isTrue();
+    }
+
+    @Test
+    void whenTargetingKeyFallsWithinRolloutPercentage_andSegmentMatchesRequiredSegments_evaluatesToTrue() {
+        // "evaluation-key:targeting-key" is known to hash to bucket 13
+        // rollout=13 → within; segment license=trial matches → true
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-x", true, "evaluation-key", List.of(new Segment("license", "trial")), 13)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        var ctx = new MutableContext();
+        ctx.setTargetingKey("targeting-key");
+        ctx.add("license", "trial");
+        assertThat(subject.evaluate("feature-x", false, ctx).getValue()).isTrue();
+    }
+
+    @Test
+    void whenTargetingKeyFallsWithinRolloutPercentage_andSegmentValueDoesNotMatchRequiredSegment_evaluatesToFalse() {
+        // "evaluation-key:targeting-key" is known to hash to bucket 13
+        // rollout=99 → within; but required segment is license=enterprise, context has license=trial → false
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-x", true, "evaluation-key", List.of(new Segment("license", "enterprise")), 99)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        var ctx = new MutableContext();
+        ctx.setTargetingKey("targeting-key");
+        ctx.add("license", "trial");
+        assertThat(subject.evaluate("feature-x", false, ctx).getValue()).isFalse();
+    }
+
+    @Test
+    void whenTargetingKeyFallsOutsideRolloutPercentage_andSegmentValueDoesNotMatchRequiredSegment_evaluatesToFalse() {
+        // "evaluation-key:targeting-key" is known to hash to bucket 13 > rollout=12 → outside → false
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-x", true, "evaluation-key", List.of(new Segment("license", "enterprise")), 12)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+        var ctx = new MutableContext();
+        ctx.setTargetingKey("targeting-key");
+        ctx.add("license", "trial");
+        assertThat(subject.evaluate("feature-x", false, ctx).getValue()).isFalse();
+    }
+
+    @Test
+    void whenFeatureHasRequiredSegment_toleratesNullValuesInContext() {
+        var toggles = new FeatureToggles(
+                List.of(new FeatureToggleEvaluation("feature-x", true, "evaluation-key", List.of(new Segment("license", "trial")), 100)),
+                new byte[0]
+        );
+        var subject = new OctopusContext(toggles);
+
+        // null value for the segment key → does not match
+        var ctxNullLicense = new MutableContext();
+        ctxNullLicense.add("license", (String) null);
+        assertThat(subject.evaluate("feature-x", false, ctxNullLicense).getValue()).isFalse();
+
+        // unrelated segment key → does not match
+        var ctxOtherSegment = new MutableContext();
+        ctxOtherSegment.add("other", "segment");
+        assertThat(subject.evaluate("feature-x", false, ctxOtherSegment).getValue()).isFalse();
+
+        // null context → does not match
+        assertThat(subject.evaluate("feature-x", false, null).getValue()).isFalse();
+    }
+
     @TestFactory
     Iterable<DynamicTest> shouldCorrectlyDynamicallyEvaluateSegmentsWhenSupplied() {
         return Arrays.asList(
