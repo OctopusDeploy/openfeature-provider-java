@@ -70,10 +70,9 @@ class FeatureToggleEvaluationDeserializationTests {
 
     @Test
     void shouldDeserializeListOfToggles() throws Exception {
-        List<FeatureToggleEvaluation> result = objectMapper.readValue(
+        var result = objectMapper.readValue(
                 resource("toggle-list.json"),
-                new TypeReference<>() {
-                }
+                new TypeReference<List<FeatureToggleEvaluation>>() {}
         );
 
         assertThat(result).hasSize(2);
@@ -85,10 +84,9 @@ class FeatureToggleEvaluationDeserializationTests {
 
     @Test
     void shouldDeserializeListOfTogglesWithVariousFieldCasings() throws Exception {
-        List<FeatureToggleEvaluation> result = objectMapper.readValue(
+        var result = objectMapper.readValue(
                 resource("toggles-with-different-field-capitalisation.json"),
-                new TypeReference<>() {
-                }
+                new TypeReference<List<FeatureToggleEvaluation>>() {}
         );
 
         assertThat(result).hasSize(3);

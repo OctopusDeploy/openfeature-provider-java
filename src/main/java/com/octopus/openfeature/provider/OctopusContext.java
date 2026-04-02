@@ -47,8 +47,7 @@ class OctopusContext {
                     .build();
         }
 
-        // EvaluationKey and ClientRolloutPercentage are guaranteed non-null here:
-        // missingRequiredPropertiesForClientSideEvaluation() would have thrown for enabled toggles.
+        // EvaluationKey and ClientRolloutPercentage are guaranteed non-null here via missingRequiredPropertiesForClientSideEvaluation()
         String evaluationKey = toggleValue.getEvaluationKey().orElseThrow();
         int rolloutPercentage = toggleValue.getClientRolloutPercentage().orElseThrow();
         String targetingKey = evaluationContext != null ? evaluationContext.getTargetingKey() : null;
@@ -77,8 +76,10 @@ class OctopusContext {
                     .build();
         }
 
+        var segments = toggleValue.getSegments().orElseThrow();
+
         return ProviderEvaluation.<Boolean>builder()
-                .value(matchesSegment(evaluationContext, toggleValue.getSegments().orElseThrow()))
+                .value(matchesSegment(evaluationContext, segments))
                 .reason(Reason.TARGETING_MATCH.toString())
                 .build();
     }
@@ -95,14 +96,20 @@ class OctopusContext {
 
     private int getNormalizedNumber(String evaluationKey, String targetingKey) {
         byte[] bytes = (evaluationKey + ":" + targetingKey).getBytes(StandardCharsets.UTF_8);
-        // MurmurHash3 32-bit, seed 0. Explicitly treating output as unsigned 32-bit for
-        // consistent results across all client libraries (matching .NET implementation).
+
+        // MurmurHash3 32-bit, seed 0. murmur3_32_fixed is Guava's corrected implementation
+        // that processes tail bytes in little-endian order, matching the reference C spec and
+        // equivalent to .NET's MurmurHash.Create32() + BinaryPrimitives.ReadUInt32LittleEndian().
         int hash = Hashing.murmur3_32_fixed(0).hashBytes(bytes).asInt();
+
+        // Java has no unsigned integer type. Integer.toUnsignedLong() reinterprets the signed
+        // int as an unsigned 32-bit value (widened to long) — equivalent to casting to uint in C#.
         long unsignedHash = Integer.toUnsignedLong(hash);
+
         return (int) (unsignedHash % 100) + 1;
     }
 
-    private Boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
+    Boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
         if (evaluationContext == null) {
             return false;
         }
