@@ -109,7 +109,7 @@ class OctopusContext {
         return (int) (unsignedHash % 100) + 1;
     }
 
-    Boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
+    static boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
         if (evaluationContext == null) {
             return false;
         }
