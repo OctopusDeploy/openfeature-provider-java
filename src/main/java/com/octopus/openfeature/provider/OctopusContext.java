@@ -1,6 +1,6 @@
 package com.octopus.openfeature.provider;
 
-import com.google.common.hash.Hashing;
+import org.apache.commons.codec.digest.MurmurHash3;
 import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 import dev.openfeature.sdk.exceptions.ParseError;
@@ -97,10 +97,10 @@ class OctopusContext {
     static int getNormalizedNumber(String evaluationKey, String targetingKey) {
         byte[] bytes = (evaluationKey + ":" + targetingKey).getBytes(StandardCharsets.UTF_8);
 
-        // MurmurHash3 32-bit, seed 0. murmur3_32_fixed is Guava's corrected implementation
-        // that processes tail bytes in little-endian order, matching the reference C spec and
-        // equivalent to .NET's MurmurHash.Create32() + BinaryPrimitives.ReadUInt32LittleEndian().
-        int hash = Hashing.murmur3_32_fixed(0).hashBytes(bytes).asInt();
+        // MurmurHash3 32-bit, seed 0. hash32x86 processes tail bytes in little-endian order,
+        // matching the reference C spec and equivalent to .NET's MurmurHash.Create32() +
+        // BinaryPrimitives.ReadUInt32LittleEndian().
+        int hash = MurmurHash3.hash32x86(bytes, 0, bytes.length, 0);
 
         // Java has no unsigned integer type. Integer.toUnsignedLong() reinterprets the signed
         // int as an unsigned 32-bit value (widened to long) — equivalent to casting to uint in C#.

@@ -116,9 +116,9 @@
             <version>2.19.0</version>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>33.3.0-jre</version>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.21.0</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
