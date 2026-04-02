@@ -94,7 +94,7 @@ class OctopusContext {
                 || evaluation.getSegments().isEmpty();
     }
 
-    private int getNormalizedNumber(String evaluationKey, String targetingKey) {
+    static int getNormalizedNumber(String evaluationKey, String targetingKey) {
         byte[] bytes = (evaluationKey + ":" + targetingKey).getBytes(StandardCharsets.UTF_8);
 
         // MurmurHash3 32-bit, seed 0. murmur3_32_fixed is Guava's corrected implementation
