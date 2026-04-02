@@ -29,7 +29,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenEvaluatedWithCasingDifferences_evaluationIsInsensitiveToCase() {
+    void whenEvaluatedWithCasingDifferences_EvaluationIsInsensitiveToCase() {
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 100)),
                 new byte[0]
@@ -49,7 +49,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void givenAFlagKeyThatIsNotASlug_throwsFlagNotFound() {
+    void givenAFlagKeyThatIsNotASlug_ThrowsFlagNotFound() {
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("this-is-clearly-not-a-slug", true, "evaluation-key", Collections.emptyList(), 100)),
                 new byte[0]
@@ -69,7 +69,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenAFeatureIsToggledOnForASpecificSegment_evaluatesToTrueWhenSegmentIsSpecified() {
+    void whenAFeatureIsToggledOnForASpecificSegment_EvaluatesToTrueWhenSegmentIsSpecified() {
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("testfeature", true, "evaluation-key", List.of(new Segment("license", "trial")), 100)),
                 new byte[0]
@@ -82,7 +82,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenFeatureIsNotToggledOnForSpecificSegments_evaluatesToTrueRegardlessOfSegmentSpecified() {
+    void whenFeatureIsNotToggledOnForSpecificSegments_EvaluatesToTrueRegardlessOfSegmentSpecified() {
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("testfeature", true, "evaluation-key", Collections.emptyList(), 100)),
                 new byte[0]
@@ -94,7 +94,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenAFeatureIsToggledOnForMultipleSegments_evaluatesCorrectly() {
+    void whenAFeatureIsToggledOnForMultipleSegments_EvaluatesCorrectly() {
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation(
                         "testfeature", true, "evaluation-key",
@@ -131,7 +131,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenAFeatureIsToggledOnForASpecificSegment_toleratesNullValuesInContext() {
+    void whenAFeatureIsToggledOnForASpecificSegment_ToleratesNullValuesInContext() {
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("testfeature", true, "evaluation-key", List.of(new Segment("license", "trial")), 100)),
                 new byte[0]
@@ -148,7 +148,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenTargetingKeyFallsWithinRolloutPercentage_andFeatureIsNotToggledForSegments_resolvesToTrue() {
+    void whenTargetingKeyFallsWithinRolloutPercentage_AndFeatureIsNotToggledForSegments_ResolvesToTrue() {
         // "evaluation-key:targeting-key" is known to hash to bucket 13
         // rollout=13 → bucket(13) <= rollout(13) → within → true
         var toggles = new FeatureToggles(
@@ -160,7 +160,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenTargetingKeyFallsOutsideRolloutPercentage_andFeatureIsNotToggledForSegments_resolvesToFalse() {
+    void whenTargetingKeyFallsOutsideRolloutPercentage_AndFeatureIsNotToggledForSegments_ResolvesToFalse() {
         // "evaluation-key:targeting-key" is known to hash to bucket 13
         // rollout=12 → bucket(13) > rollout(12) → outside → false
         var toggles = new FeatureToggles(
@@ -172,7 +172,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenTargetingKeyFallsWithinRolloutPercentage_andSegmentMatchesRequiredSegments_evaluatesToTrue() {
+    void whenTargetingKeyFallsWithinRolloutPercentage_AndSegmentMatchesRequiredSegments_EvaluatesToTrue() {
         // "evaluation-key:targeting-key" is known to hash to bucket 13
         // rollout=13 → within; segment license=trial matches → true
         var toggles = new FeatureToggles(
@@ -184,7 +184,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenTargetingKeyFallsWithinRolloutPercentage_andSegmentValueDoesNotMatchRequiredSegment_evaluatesToFalse() {
+    void whenTargetingKeyFallsWithinRolloutPercentage_AndSegmentValueDoesNotMatchRequiredSegment_EvaluatesToFalse() {
         // "evaluation-key:targeting-key" is known to hash to bucket 13
         // rollout=99 → within; but required segment is license=enterprise, context has license=trial → false
         var toggles = new FeatureToggles(
@@ -196,7 +196,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenTargetingKeyFallsOutsideRolloutPercentage_andSegmentValueDoesNotMatchRequiredSegment_evaluatesToFalse() {
+    void whenTargetingKeyFallsOutsideRolloutPercentage_AndSegmentValueDoesNotMatchRequiredSegment_EvaluatesToFalse() {
         // "evaluation-key:targeting-key" is known to hash to bucket 13 > rollout=12 → outside → false
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", List.of(new Segment("license", "enterprise")), 12)),
@@ -207,7 +207,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenNoTargetingKey_rolloutIsLessThanOneHundredPercent_resolvesToFalse() {
+    void whenNoTargetingKey_RolloutIsLessThanOneHundredPercent_ResolvesToFalse() {
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 99)),
                 new byte[0]
@@ -217,7 +217,7 @@ class OctopusContextTests {
     }
 
     @Test
-    void whenNoTargetingKey_rolloutIsEqualToOneHundredPercent_resolvesToTrue() {
+    void whenNoTargetingKey_RolloutIsEqualToOneHundredPercent_ResolvesToTrue() {
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 100)),
                 new byte[0]
