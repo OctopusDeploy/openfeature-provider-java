@@ -138,7 +138,7 @@ class OctopusContextTests {
         );
         var subject = new OctopusContext(toggles);
 
-        // null value for the segment key → does not match
+        // null value for the segment key does not match
         var ctxNullLicense = new MutableContext();
         ctxNullLicense.add("license", (String) null);
         assertThat(subject.evaluate("testfeature", false, ctxNullLicense).getValue()).isFalse();
@@ -149,8 +149,7 @@ class OctopusContextTests {
 
     @Test
     void whenTargetingKeyFallsWithinRolloutPercentage_AndFeatureIsNotToggledForSegments_ResolvesToTrue() {
-        // "evaluation-key:targeting-key" is known to hash to bucket 13
-        // rollout=13 → bucket(13) <= rollout(13) → within → true
+        // "evaluation-key:targeting-key" hashes to bucket 13, which is within the rollout of 13, so the feature is enabled
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 13)),
                 new byte[0]
@@ -161,8 +160,7 @@ class OctopusContextTests {
 
     @Test
     void whenTargetingKeyFallsOutsideRolloutPercentage_AndFeatureIsNotToggledForSegments_ResolvesToFalse() {
-        // "evaluation-key:targeting-key" is known to hash to bucket 13
-        // rollout=12 → bucket(13) > rollout(12) → outside → false
+        // "evaluation-key:targeting-key" hashes to bucket 13, which exceeds the rollout of 12, so the feature is disabled
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 12)),
                 new byte[0]
@@ -173,8 +171,7 @@ class OctopusContextTests {
 
     @Test
     void whenTargetingKeyFallsWithinRolloutPercentage_AndSegmentMatchesRequiredSegments_EvaluatesToTrue() {
-        // "evaluation-key:targeting-key" is known to hash to bucket 13
-        // rollout=13 → within; segment license=trial matches → true
+        // "evaluation-key:targeting-key" hashes to bucket 13, which is within the rollout of 13, and the segment license=trial matches
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", List.of(new Segment("license", "trial")), 13)),
                 new byte[0]
@@ -185,8 +182,8 @@ class OctopusContextTests {
 
     @Test
     void whenTargetingKeyFallsWithinRolloutPercentage_AndSegmentValueDoesNotMatchRequiredSegment_EvaluatesToFalse() {
-        // "evaluation-key:targeting-key" is known to hash to bucket 13
-        // rollout=99 → within; but required segment is license=enterprise, context has license=trial → false
+        // "evaluation-key:targeting-key" hashes to bucket 13, which is within the rollout of 99, but the required
+        // segment license=enterprise does not match the provided license=trial, so the feature is disabled
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", List.of(new Segment("license", "enterprise")), 99)),
                 new byte[0]
@@ -197,7 +194,7 @@ class OctopusContextTests {
 
     @Test
     void whenTargetingKeyFallsOutsideRolloutPercentage_AndSegmentValueDoesNotMatchRequiredSegment_EvaluatesToFalse() {
-        // "evaluation-key:targeting-key" is known to hash to bucket 13 > rollout=12 → outside → false
+        // "evaluation-key:targeting-key" hashes to bucket 13, which exceeds the rollout of 12, and the segment also does not match
         var toggles = new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", List.of(new Segment("license", "enterprise")), 12)),
                 new byte[0]

@@ -1,9 +1,9 @@
 package com.octopus.openfeature.provider;
 
-import org.apache.commons.codec.digest.MurmurHash3;
 import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 import dev.openfeature.sdk.exceptions.ParseError;
+import org.apache.commons.codec.digest.MurmurHash3;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
