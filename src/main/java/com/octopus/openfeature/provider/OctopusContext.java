@@ -3,7 +3,9 @@ package com.octopus.openfeature.provider;
 import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 import dev.openfeature.sdk.exceptions.ParseError;
+import org.apache.commons.codec.digest.MurmurHash3;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -26,10 +28,10 @@ class OctopusContext {
     }
 
     ProviderEvaluation<Boolean> evaluate(String slug, Boolean defaultValue, EvaluationContext evaluationContext) {
-        // find the feature toggle matching the slug
-        var toggleValue = featureToggles.getEvaluations().stream().filter(f -> f.getSlug().equalsIgnoreCase(slug)).findFirst().orElse(null);
+        var toggleValue = featureToggles.getEvaluations().stream()
+                .filter(f -> f.getSlug().equalsIgnoreCase(slug))
+                .findFirst().orElse(null);
 
-        // this exception will be handled by OpenFeature, and the default value will be used
         if (toggleValue == null) {
             throw new FlagNotFoundError();
         }
@@ -38,18 +40,46 @@ class OctopusContext {
             throw new ParseError("Feature toggle " + toggleValue.getSlug() + " is missing necessary information for client-side evaluation.");
         }
 
-        // if the toggle is disabled, or if it has no segments, then we don't need to evaluate dynamically
-        if (!toggleValue.isEnabled() || !toggleValue.hasSegments()) {
+        if (!toggleValue.isEnabled()) {
             return ProviderEvaluation.<Boolean>builder()
-                    .value(toggleValue.isEnabled())
+                    .value(false)
                     .reason(Reason.DEFAULT.toString())
                     .build();
         }
 
-        // If the toggle is enabled and has segments configured, then we need to evaluate dynamically,
-        // checking the context matches the segments
+        // EvaluationKey and ClientRolloutPercentage are guaranteed non-null here via missingRequiredPropertiesForClientSideEvaluation()
+        String evaluationKey = toggleValue.getEvaluationKey().orElseThrow();
+        int rolloutPercentage = toggleValue.getClientRolloutPercentage().orElseThrow();
+        String targetingKey = evaluationContext != null ? evaluationContext.getTargetingKey() : null;
+
+        if (targetingKey == null || targetingKey.isEmpty()) {
+            if (rolloutPercentage < 100) {
+                return ProviderEvaluation.<Boolean>builder()
+                        .value(false)
+                        .reason(Reason.TARGETING_MATCH.toString())
+                        .build();
+            }
+            // rolloutPercentage == 100: fall through to segment check
+        } else {
+            if (getNormalizedNumber(evaluationKey, targetingKey) > rolloutPercentage) {
+                return ProviderEvaluation.<Boolean>builder()
+                        .value(false)
+                        .reason(Reason.TARGETING_MATCH.toString())
+                        .build();
+            }
+        }
+
+        if (!toggleValue.hasSegments()) {
+            return ProviderEvaluation.<Boolean>builder()
+                    .value(true)
+                    .reason(Reason.DEFAULT.toString())
+                    .build();
+        }
+
+        var segments = toggleValue.getSegments().orElseThrow();
+
         return ProviderEvaluation.<Boolean>builder()
-                .value(matchesSegment(evaluationContext, toggleValue.getSegments().orElseThrow())) // checked in hasSegments
+                .value(matchesSegment(evaluationContext, segments))
                 .reason(Reason.TARGETING_MATCH.toString())
                 .build();
     }
@@ -64,7 +94,22 @@ class OctopusContext {
                 || evaluation.getSegments().isEmpty();
     }
 
-    private Boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
+    static int getNormalizedNumber(String evaluationKey, String targetingKey) {
+        byte[] bytes = (evaluationKey + ":" + targetingKey).getBytes(StandardCharsets.UTF_8);
+
+        // MurmurHash3 32-bit, seed 0. hash32x86 processes tail bytes in little-endian order,
+        // matching the reference C spec and equivalent to .NET's MurmurHash.Create32() +
+        // BinaryPrimitives.ReadUInt32LittleEndian().
+        int hash = MurmurHash3.hash32x86(bytes, 0, bytes.length, 0);
+
+        // Java has no unsigned integer type. Integer.toUnsignedLong() reinterprets the signed
+        // int as an unsigned 32-bit value (widened to long) — equivalent to casting to uint in C#.
+        long unsignedHash = Integer.toUnsignedLong(hash);
+
+        return (int) (unsignedHash % 100) + 1;
+    }
+
+    static boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
         if (evaluationContext == null) {
             return false;
         }
