@@ -61,7 +61,7 @@ class OctopusContextTests {
     @Test
     void throwsFlagNotFound_IfFeatureIsNotContainedWithinSet() {
         var toggles = new FeatureToggles(
-                List.of(new FeatureToggleEvaluation("testfeature", true, "evaluation-key", Collections.emptyList(), 100)),
+                List.of(new FeatureToggleEvaluation("testfeature", false, "evaluation-key", Collections.emptyList(), 100)),
                 new byte[0]
         );
         var subject = new OctopusContext(toggles);
@@ -396,7 +396,17 @@ class OctopusContextTests {
                 Arguments.of("test", "az", 1),
                 Arguments.of("bucket", "j", 1),
                 Arguments.of("test", "y", 100),
-                Arguments.of("flag", "c", 100)
+                Arguments.of("flag", "c", 100),
+                Arguments.of("test-feature", "用户", 30),
+                Arguments.of("test-feature", "مستخدم", 19),
+                Arguments.of("test-feature", "ユーザー", 73),
+                Arguments.of("test-feature", "🎉", 54),
+                Arguments.of("test-feature", "café", 31),
+                Arguments.of("test-feature", "naïve", 28),
+                Arguments.of("rollout", "用户-001", 20),
+                Arguments.of("experiment-a", "пользователь", 81),
+                Arguments.of("test-feature", "사용자", 62),
+                Arguments.of("dark-launch", "テナント-001", 8)
         );
     }
 }
