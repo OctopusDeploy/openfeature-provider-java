@@ -1,6 +1,7 @@
 package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,19 +20,21 @@ class OctopusClient {
     private static final System.Logger logger = System.getLogger(OctopusClient.class.getName());
     private static final int StatusCodeNotFound = 404;
 
-    OctopusClient(OctopusConfiguration config){
+    OctopusClient(OctopusConfiguration config) {
         this.config = config;
     }
-    
-    Boolean haveFeatureTogglesChanged(byte[] contentHash)
-    {
-       if (contentHash.length == 0) { return true; }
-       URI checkURI = getCheckURI();
+
+    Boolean haveFeatureTogglesChanged(byte[] contentHash) {
+        if (contentHash.length == 0) {
+            return true;
+        }
+        URI checkURI = getCheckURI();
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(checkURI)
                 .header("Authorization", String.format("Bearer %s", config.getClientIdentifier()))
+                .header("X-Octopus-Client", buildOctopusClientHeader())
                 .build();
         try {
             HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -43,53 +46,66 @@ class OctopusClient {
             return false;
         }
     }
-    
-    FeatureToggles getFeatureToggleEvaluationManifest()
-    {
+
+    FeatureToggles getFeatureToggleEvaluationManifest() {
         URI manifestURI = getManifestURI();
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(manifestURI)
                 .header("Authorization", String.format("Bearer %s", config.getClientIdentifier()))
+                .header("X-Octopus-Client", buildOctopusClientHeader())
                 .build();
         try {
             HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (httpResponse.statusCode() == StatusCodeNotFound) {
-               logger.log(System.Logger.Level.WARNING,String.format("Failed to retrieve feature toggles for client identifier %s from %s", config.getClientIdentifier(), manifestURI.toString())); 
-               return null;
+                logger.log(System.Logger.Level.WARNING, String.format("Failed to retrieve feature toggles for client identifier %s from %s", config.getClientIdentifier(), manifestURI.toString()));
+                return null;
             }
             Optional<String> contentHashHeader = httpResponse.headers().firstValue("ContentHash");
             if (contentHashHeader.isEmpty()) {
-                logger.log(System.Logger.Level.WARNING,String.format("Feature toggle response from %s did not contain expected ContentHash header", manifestURI.toString()));      
+                logger.log(System.Logger.Level.WARNING, String.format("Feature toggle response from %s did not contain expected ContentHash header", manifestURI.toString()));
                 return null;
             }
-            var evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<FeatureToggleEvaluation>>(){});
+            var evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<FeatureToggleEvaluation>>() {
+            });
             return new FeatureToggles(evaluations, Base64.getDecoder().decode(contentHashHeader.get()));
         } catch (Exception e) {
             logger.log(System.Logger.Level.WARNING, "Unable to query Octopus Feature Toggle service", e);
             return null;
         }
     }
-    
+
+    String buildOctopusClientHeader() {
+        var clientHeaderValueBuilder = new StringBuilder(this.config.getProductMetadata().getName());
+
+        this.config.getProductMetadata().getVersion().ifPresent(s -> clientHeaderValueBuilder.append("/").append(s));
+
+        clientHeaderValueBuilder.append(" openfeature-provider-java/").append("foo");
+
+        return clientHeaderValueBuilder.toString();
+    }
+
     private URI getCheckURI() {
         try {
             return new URL(config.getServerUri().toURL(), "/api/featuretoggles/check/v3/").toURI();
         } catch (MalformedURLException | URISyntaxException ignored) // we know this URL is well-formed
-        { }
+        {
+        }
         return null;
     }
-    
+
     private URI getManifestURI() {
         try {
             return new URL(config.getServerUri().toURL(), "/api/toggles/evaluations/v3/").toURI();
         } catch (MalformedURLException | URISyntaxException ignored) // we know this URL is well-formed
-        { }
+        {
+        }
         return null;
     }
-    
+
     // This class needs to be static to allow deserialization
     private static class FeatureToggleCheckResponse {
-       public byte[] contentHash;
-    } 
+        public byte[] contentHash;
+    }
 }
