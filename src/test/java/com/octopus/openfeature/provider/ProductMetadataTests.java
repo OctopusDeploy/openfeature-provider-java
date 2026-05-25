@@ -51,6 +51,20 @@ class ProductMetadataTests {
     }
 
     @Test
+    void constructor_whenNullNameProvided_throwsIllegalArgumentException() {
+        assertThatThrownBy(() -> new ProductMetadata(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Product name");
+    }
+
+    @Test
+    void constructor_whenNullVersionProvided_throwsIllegalArgumentException() {
+        assertThatThrownBy(() -> new ProductMetadata("MyProduct", null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Product version");
+    }
+
+    @Test
     void constructor_whenNameBecomesEmptyAfterCleaning_throwsIllegalArgumentException() {
         assertThatThrownBy(() -> new ProductMetadata("   "))
                 .isInstanceOf(IllegalArgumentException.class)
