@@ -3,7 +3,7 @@ package com.octopus.openfeature.provider;
 import dev.openfeature.sdk.*;
 
 public class OctopusProvider extends EventProvider {
-    private static final String PROVIDER_NAME = "octopus";
+    private static final String PROVIDER_NAME = "octopus-java-provider";
     private final OctopusConfiguration config;
     private final OctopusContextProvider contextProvider;
     
