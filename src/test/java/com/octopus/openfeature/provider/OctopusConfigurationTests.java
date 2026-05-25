@@ -5,8 +5,21 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class OctopusConfigurationTests {
+
+    @Test
+    void constructor_whenNullClientIdentifierProvided_throwsNullPointerException() {
+        assertThatThrownBy(() -> new OctopusConfiguration(null, new ProductMetadata("TestClient")))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void constructor_whenNullProductMetadataProvided_throwsNullPointerException() {
+        assertThatThrownBy(() -> new OctopusConfiguration("test-client", null))
+                .isInstanceOf(NullPointerException.class);
+    }
 
     @Test
     void defaultServerUriIsOctopusCloud() {
