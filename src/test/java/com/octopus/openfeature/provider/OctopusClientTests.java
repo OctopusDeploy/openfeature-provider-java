@@ -13,13 +13,16 @@ class OctopusClientTests {
 
     private static String loadProviderVersion() {
         try {
-            var props = new Properties();
-            props.load(OctopusClient.class.getClassLoader().getResourceAsStream("project.properties"));
+            var projectProperties = new Properties();
+            try (var resourceStream = OctopusClient.class.getClassLoader().getResourceAsStream("project.properties"))
+            {
+                projectProperties.load(resourceStream);
+            }
 
-            var version = props.getProperty("version");
+            var version = projectProperties.getProperty("version");
             assertThat(version).matches("\\d+.*"); // Ensure property filtering is working.
             return version;
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             throw new RuntimeException("Could not load project.properties", e);
         }
     }

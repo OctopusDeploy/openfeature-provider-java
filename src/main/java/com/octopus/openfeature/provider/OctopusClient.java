@@ -22,7 +22,11 @@ class OctopusClient {
     private static String loadProviderVersion() {
         try {
             var projectProperties = new Properties();
-            projectProperties.load(OctopusClient.class.getClassLoader().getResourceAsStream("project.properties"));
+            try (var resourceStream = OctopusClient.class.getClassLoader().getResourceAsStream("project.properties"))
+            {
+                projectProperties.load(resourceStream);
+            }
+
             return projectProperties.getProperty("version");
         } catch (IOException | NullPointerException e) {
             logger.log(System.Logger.Level.WARNING, "Unable to load project properties to determine provider version.", e);
