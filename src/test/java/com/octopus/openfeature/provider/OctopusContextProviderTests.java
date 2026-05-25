@@ -1,7 +1,4 @@
 package com.octopus.openfeature.provider;
-
-import org.junit.jupiter.api.Test;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,13 +8,15 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 class OctopusContextProviderTests {
 
-    static class FakeClient extends OctopusClient {
+    static class MockOctopusFeatureClient extends OctopusClient {
+
         private volatile FeatureToggles toggles;
 
-        FakeClient(FeatureToggles toggles) {
+        MockOctopusFeatureClient(FeatureToggles toggles) {
             super(null);
             this.toggles = toggles;
         }
@@ -37,7 +36,9 @@ class OctopusContextProviderTests {
         }
     }
 
-    private OctopusConfiguration fastConfig() {
+    private final OctopusConfiguration configuration = configure();
+
+    private static OctopusConfiguration configure() {
         var config = new OctopusConfiguration("token");
         config.setCacheDuration(Duration.ofMillis(100));
         return config;
@@ -45,28 +46,36 @@ class OctopusContextProviderTests {
 
     @Test
     void whenInitialized_RefreshesCacheAfterCacheDurationExpires() throws InterruptedException {
+
         byte[] initialHash = {0x01, 0x02, 0x03, 0x04};
         byte[] updatedHash = {0x01, 0x02, 0x03, 0x05};
 
-        var client = new FakeClient(new FeatureToggles(
+        var client = new MockOctopusFeatureClient(new FeatureToggles(
             List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 100)),
             initialHash
         ));
-        var provider = new OctopusContextProvider(fastConfig(), client);
+
+        var provider = new OctopusContextProvider(configuration, client);
         provider.initialize();
 
         try {
+            // Validate the initial state
             assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(initialHash);
             assertThat(provider.getOctopusContext().evaluate("test-feature", false, null).getValue()).isTrue();
 
+            // Simulate a change in the available feature toggles
             client.changeToggles(new FeatureToggles(
                 List.of(new FeatureToggleEvaluation("test-feature", false, "evaluation-key", Collections.emptyList(), 100)),
                 updatedHash
             ));
+
+            // Wait for the cache to expire
             Thread.sleep(500);
 
+            // Validate the updated toggles are available
             assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(updatedHash);
             assertThat(provider.getOctopusContext().evaluate("test-feature", false, null).getValue()).isFalse();
+
         } finally {
             provider.shutdown();
         }
@@ -74,9 +83,10 @@ class OctopusContextProviderTests {
 
     @Test
     void whenInitialized_AndRefreshFails_RetainsExistingContextAndLogsError() throws InterruptedException {
+
         byte[] contentHash = {0x01, 0x02, 0x03, 0x04};
 
-        var client = new FakeClient(new FeatureToggles(
+        var client = new MockOctopusFeatureClient(new FeatureToggles(
             List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 100)),
             contentHash
         ));
@@ -90,16 +100,22 @@ class OctopusContextProviderTests {
         };
         julLogger.addHandler(handler);
 
-        var provider = new OctopusContextProvider(fastConfig(), client);
+        var provider = new OctopusContextProvider(configuration, client);
+
         try {
             provider.initialize();
 
+            // Simulate a failed fetch
             client.changeToggles(null);
+
+            // Wait for the cache to expire
             Thread.sleep(500);
 
+            // Validate that the existing context is retained and an error was logged
             assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(contentHash);
             assertThat(provider.getOctopusContext().evaluate("test-feature", false, null).getValue()).isTrue();
             assertThat(logMessages).anyMatch(m -> m.startsWith("Failed to retrieve updated feature manifest"));
+
         } finally {
             julLogger.removeHandler(handler);
             provider.shutdown();
