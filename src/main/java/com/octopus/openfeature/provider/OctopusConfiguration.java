@@ -2,6 +2,7 @@ package com.octopus.openfeature.provider;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.Objects;
 
 public class OctopusConfiguration {
     private final String clientIdentifier;
@@ -12,8 +13,8 @@ public class OctopusConfiguration {
     private Duration cacheDuration = Duration.ofMinutes(1);
 
     public OctopusConfiguration(String clientIdentifier, ProductMetadata productMetadata) {
-        this.clientIdentifier = clientIdentifier;
-        this.productMetadata = productMetadata;
+        this.clientIdentifier = Objects.requireNonNull(clientIdentifier);
+        this.productMetadata = Objects.requireNonNull(productMetadata);
     }
 
     public String getClientIdentifier() { return clientIdentifier; }
