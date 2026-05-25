@@ -43,13 +43,13 @@ public class ProductMetadata {
     }
 
     private void validateName() {
-        if (name == null || name.isEmpty()) {
+        if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Product name must contain at least one valid token character.");
         }
     }
 
     private void validateVersion() {
-        if (version == null || version.isEmpty()) {
+        if (version == null || version.isBlank()) {
             throw new IllegalArgumentException("Product version must contain at least one valid token character.");
         }
     }

@@ -25,31 +25,31 @@ class OctopusClientTests {
     }
 
     @Test
-    void buildOctopusClientHeader_withNameOnly_headerContainsProductNameAndProviderInformation() {
+    void buildOctopusClientHeaderValue_withNameOnly_headerValueContainsProductNameAndProviderInformation() {
         var config = new OctopusConfiguration("test-id", new ProductMetadata("MyProduct"));
         var client = new OctopusClient(config);
 
-        assertThat(client.buildOctopusClientHeader())
+        assertThat(client.buildOctopusClientHeaderValue())
                 .isEqualTo("MyProduct openfeature-provider-java/" + PROVIDER_VERSION);
     }
 
     @Test
-    void buildOctopusClientHeader_withNameAndVersion_headerContainsProductAndProviderInformation() {
+    void buildOctopusClientHeaderValue_withNameAndVersion_headerValueContainsProductAndProviderInformation() {
         var config = new OctopusConfiguration("test-id", new ProductMetadata("MyProduct", "2024.1.0"));
         var client = new OctopusClient(config);
 
-        assertThat(client.buildOctopusClientHeader())
+        assertThat(client.buildOctopusClientHeaderValue())
                 .isEqualTo("MyProduct/2024.1.0 openfeature-provider-java/" + PROVIDER_VERSION);
     }
 
     @Test
-    void buildOctopusClientHeader_withNameContainingUnsupportedChars_stripsCharsFromHeader() {
+    void buildOctopusClientHeaderValue_withNameContainingUnsupportedChars_stripsCharsFromHeaderValue() {
         // Note: More character checking tests are in ProductMetadataTests.java
 
         var config = new OctopusConfiguration("test-id", new ProductMetadata("My Product"));
         var client = new OctopusClient(config);
 
-        assertThat(client.buildOctopusClientHeader())
+        assertThat(client.buildOctopusClientHeaderValue())
                 .isEqualTo("MyProduct openfeature-provider-java/" + PROVIDER_VERSION);
     }
 }
