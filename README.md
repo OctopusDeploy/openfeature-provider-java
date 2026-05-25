@@ -22,12 +22,12 @@ The Octopus OpenFeature provider for Java is available as a [Maven package](http
 <dependency>
     <groupId>com.octopus.openfeature</groupId>
     <artifactId>octopus-openfeature-provider</artifactId>
-    <version>0.2.0</version> <!-- use current version number -->
+    <version>1.0.0</version> <!-- use current version number -->
 </dependency>
 ```
 
 ```groovy
-implementation group: 'com.octopus.openfeature', name: 'octopus-openfeature-provider', version: '0.2.0'
+implementation group: 'com.octopus.openfeature', name: 'octopus-openfeature-provider', version: '1.0.0'
 // Use current version number
 ```
 
@@ -38,12 +38,19 @@ import dev.openfeature.sdk.*;
 import com.octopus.openfeature.provider.*;
 
 public class Main {
-    
+
     public static void main(String[] args) {
         var openFeature = OpenFeatureAPI.getInstance();
-        openFeature.setProviderAndWait(new OctopusProvider(new OctopusConfiguration("Your Octopus client identifier")));
-        var openFeatureClient = openFeature.getClient(); 
-        
+        openFeature.setProviderAndWait(
+            new OctopusProvider(
+                new OctopusConfiguration(
+                    "Your Octopus client identifier", 
+                    new ProductMetadata("YourProductName", "1.0.0")
+                )
+            )
+        );
+        var openFeatureClient = openFeature.getClient();
+
         var darkModeIsEnabled = openFeatureClient.getBooleanValue("dark-mode", false);
     }
 }
