@@ -17,6 +17,18 @@ class OctopusClient {
     private final OctopusConfiguration config;
     private static final System.Logger logger = System.getLogger(OctopusClient.class.getName());
     private static final int StatusCodeNotFound = 404;
+    private static final String PROVIDER_VERSION = loadProviderVersion();
+
+    private static String loadProviderVersion() {
+        try {
+            var projectProperties = new Properties();
+            projectProperties.load(OctopusClient.class.getClassLoader().getResourceAsStream("project.properties"));
+            return projectProperties.getProperty("version");
+        } catch (IOException | NullPointerException e) {
+            logger.log(System.Logger.Level.WARNING, "Unable to load project properties to determine provider version.", e);
+            return null;
+        }
+    }
 
     OctopusClient(OctopusConfiguration config) {
         this.config = config;
@@ -78,16 +90,7 @@ class OctopusClient {
 
         this.config.getProductMetadata().getVersion().ifPresent(s -> clientHeaderValueBuilder.append("/").append(s));
 
-        String providerVersion = null;
-        try {
-            var projectProperties = new Properties();
-            projectProperties.load(this.getClass().getClassLoader().getResourceAsStream("project.properties"));
-            providerVersion = projectProperties.getProperty("version");
-        } catch (IOException | NullPointerException e) {
-            logger.log(System.Logger.Level.WARNING, "Unable to load project properties to determine provider version.", e);
-        }
-
-        clientHeaderValueBuilder.append(" openfeature-provider-java/").append(providerVersion);
+        clientHeaderValueBuilder.append(" openfeature-provider-java/").append(PROVIDER_VERSION);
 
         return clientHeaderValueBuilder.toString();
     }
