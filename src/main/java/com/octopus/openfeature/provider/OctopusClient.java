@@ -24,11 +24,16 @@ class OctopusClient {
             var projectProperties = new Properties();
             try (var resourceStream = OctopusClient.class.getClassLoader().getResourceAsStream("project.properties"))
             {
+                if(resourceStream == null) {
+                    logger.log(System.Logger.Level.WARNING, "Unable to load project properties to determine provider version.");
+                    return null;
+                }
+
                 projectProperties.load(resourceStream);
             }
 
             return projectProperties.getProperty("version");
-        } catch (IOException | NullPointerException e) {
+        } catch (IOException e) {
             logger.log(System.Logger.Level.WARNING, "Unable to load project properties to determine provider version.", e);
             return null;
         }

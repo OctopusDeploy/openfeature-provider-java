@@ -22,8 +22,8 @@ class OctopusClientTests {
             var version = projectProperties.getProperty("version");
             assertThat(version).matches("\\d+.*"); // Ensure property filtering is working.
             return version;
-        } catch (IOException | NullPointerException e) {
-            throw new RuntimeException("Could not load project.properties", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not load project.properties.", e);
         }
     }
 
