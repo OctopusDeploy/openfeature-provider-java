@@ -52,7 +52,11 @@ class OctopusContextProvider {
 
                 if (client.haveFeatureTogglesChanged(currentContext.getContentHash())) {
                     var toggles = client.getFeatureToggleEvaluationManifest();
-                    currentContext = toggles == null ? OctopusContext.empty() : new OctopusContext(toggles);
+                    if (toggles != null) {
+                        currentContext = new OctopusContext(toggles);
+                    } else {
+                        logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature manifest. Retaining existing context which may be stale.");
+                    }
                 }
 
                 delay = config.getCacheDuration();
