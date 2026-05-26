@@ -74,7 +74,7 @@ class OctopusContextProviderTests {
 
             // Validate the updated toggles are available
             assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(updatedHash);
-            assertThat(provider.getOctopusContext().evaluate("test-feature", false, null).getValue()).isFalse();
+            assertThat(provider.getOctopusContext().evaluate("test-feature", true, null).getValue()).isFalse();
 
         } finally {
             provider.shutdown();
