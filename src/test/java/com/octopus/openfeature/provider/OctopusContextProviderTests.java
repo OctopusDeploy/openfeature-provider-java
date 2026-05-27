@@ -39,7 +39,7 @@ class OctopusContextProviderTests {
     private final OctopusConfiguration configuration = configure();
 
     private static OctopusConfiguration configure() {
-        var config = new OctopusConfiguration("token");
+        var config = new OctopusConfiguration("token", new ProductMetadata("TestClient"));
         config.setCacheDuration(Duration.ofMillis(100));
         return config;
     }
