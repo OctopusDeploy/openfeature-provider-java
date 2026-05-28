@@ -1,7 +1,5 @@
 package com.octopus.openfeature.provider;
 
-import java.time.Duration;
-
 class OctopusContextProvider {
     private final OctopusConfiguration config;
     private final OctopusClient client;
@@ -9,7 +7,6 @@ class OctopusContextProvider {
     private OctopusContext currentContext = OctopusContext.empty();
     private Thread refreshThread;
     private static final System.Logger logger = System.getLogger(OctopusClient.class.getName());
-    private static final Duration retryDelay = Duration.ofSeconds(5);
 
     OctopusContextProvider(OctopusConfiguration config, OctopusClient client) {
         this.config = config;
@@ -44,11 +41,9 @@ class OctopusContextProvider {
      otherwise the state will be left stale whilst the consumer continues to make use it.
      */
     void refresh() {
-        int retryAttempt = 0;
-        var delay = config.getCacheDuration();
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                Thread.sleep(delay.toMillis());
+                Thread.sleep(config.getCacheDuration().toMillis());
 
                 if (client.haveFeatureTogglesChanged(currentContext.getContentHash())) {
                     var toggles = client.getFeatureToggleEvaluationManifest();
@@ -58,17 +53,11 @@ class OctopusContextProvider {
                         logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature manifest. Retaining existing context which may be stale.");
                     }
                 }
-
-                delay = config.getCacheDuration();
-                retryAttempt = 0;
-
             } catch (InterruptedException e) {
                 // the loop will be terminated and the thread will finish
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                logger.log(System.Logger.Level.ERROR, String.format("Failed to refresh feature toggles. Retry attempt %d", retryAttempt), e);
-                delay = retryDelay;
-                retryAttempt++;
+                logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature manifest. Retaining existing context which may be stale.", e);
             }
         }
     }
