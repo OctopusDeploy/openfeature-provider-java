@@ -105,6 +105,9 @@ class OctopusContextProviderTests {
         try {
             provider.initialize();
 
+            // Stop warnings about refresh failures from reaching the test output
+            julLogger.setUseParentHandlers(false);
+
             // Simulate a failed fetch
             client.changeToggles(null);
 
@@ -118,6 +121,7 @@ class OctopusContextProviderTests {
 
         } finally {
             julLogger.removeHandler(handler);
+            julLogger.setUseParentHandlers(true);
             provider.shutdown();
         }
     }
@@ -126,6 +130,9 @@ class OctopusContextProviderTests {
     void whenInitialFetchReturnsNothing_AndRefreshSucceeds_ContextIsPopulated() throws InterruptedException {
 
         byte[] contentHash = {0x01, 0x02, 0x03, 0x04};
+
+        var julLogger = Logger.getLogger(OctopusClient.class.getName());
+        julLogger.setUseParentHandlers(false);
 
         // Initialize with null so first fetch fails
         var client = new MockOctopusFeatureClient(null);
@@ -147,6 +154,7 @@ class OctopusContextProviderTests {
             assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(contentHash);
 
         } finally {
+            julLogger.setUseParentHandlers(true);
             provider.shutdown();
         }
     }
@@ -174,6 +182,9 @@ class OctopusContextProviderTests {
         var provider = new OctopusContextProvider(configuration, client);
         provider.initialize();
 
+        // Stop warnings about refresh failures from reaching the test output
+        julLogger.setUseParentHandlers(false);
+
         try {
             // Switch to a null client and wait for refresh to fail
             client.changeToggles(null);
@@ -194,6 +205,7 @@ class OctopusContextProviderTests {
 
         } finally {
             julLogger.removeHandler(handler);
+            julLogger.setUseParentHandlers(true);
             provider.shutdown();
         }
     }
@@ -232,6 +244,8 @@ class OctopusContextProviderTests {
             @Override public void close() {}
         };
         julLogger.addHandler(handler);
+        // Stop warnings about refresh failures from reaching the test output
+        julLogger.setUseParentHandlers(false);
 
         // Initialize with a client that will throw on refresh
         var client = new ThrowsOnRefreshClient(new FeatureToggles(
@@ -253,6 +267,7 @@ class OctopusContextProviderTests {
 
         } finally {
             julLogger.removeHandler(handler);
+            julLogger.setUseParentHandlers(true);
             provider.shutdown();
         }
     }
