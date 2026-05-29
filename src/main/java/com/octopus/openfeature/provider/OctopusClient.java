@@ -43,7 +43,7 @@ class OctopusClient {
         this.config = config;
     }
 
-    Boolean haveFeatureTogglesChanged(byte[] contentHash) {
+    Boolean haveFeatureTogglesChanged(byte[] contentHash) throws IOException, InterruptedException {
         if (contentHash.length == 0) {
             return true;
         }
@@ -55,18 +55,12 @@ class OctopusClient {
                 .header("Authorization", String.format("Bearer %s", config.getClientIdentifier()))
                 .header("X-Octopus-Client", buildOctopusClientHeaderValue())
                 .build();
-        try {
-            HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
-            FeatureToggleCheckResponse checkResponse = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), FeatureToggleCheckResponse.class);
-            return !Arrays.equals(checkResponse.contentHash, contentHash);
-        } catch (Exception e) {
-            logger.log(System.Logger.Level.WARNING, String.format("Unable to query Octopus Feature Toggle service. URI: %s", checkURI.toString()), e);
-            // Use cached toggles
-            return false;
-        }
+        HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+        FeatureToggleCheckResponse checkResponse = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), FeatureToggleCheckResponse.class);
+        return !Arrays.equals(checkResponse.contentHash, contentHash);
     }
 
-    FeatureToggles getFeatureToggleEvaluationManifest() {
+    FeatureToggles getFeatureToggleEvaluationManifest() throws IOException, InterruptedException {
         URI manifestURI = getManifestURI();
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
@@ -75,23 +69,18 @@ class OctopusClient {
                 .header("Authorization", String.format("Bearer %s", config.getClientIdentifier()))
                 .header("X-Octopus-Client", buildOctopusClientHeaderValue())
                 .build();
-        try {
-            HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (httpResponse.statusCode() == StatusCodeNotFound) {
-                logger.log(System.Logger.Level.WARNING, String.format("Failed to retrieve feature toggles for client identifier %s from %s", config.getClientIdentifier(), manifestURI.toString()));
-                return null;
-            }
-            Optional<String> contentHashHeader = httpResponse.headers().firstValue("ContentHash");
-            if (contentHashHeader.isEmpty()) {
-                logger.log(System.Logger.Level.WARNING, String.format("Feature toggle response from %s did not contain expected ContentHash header", manifestURI.toString()));
-                return null;
-            }
-            var evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<FeatureToggleEvaluation>>() {});
-            return new FeatureToggles(evaluations, Base64.getDecoder().decode(contentHashHeader.get()));
-        } catch (Exception e) {
-            logger.log(System.Logger.Level.WARNING, "Unable to query Octopus Feature Toggle service", e);
+        HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (httpResponse.statusCode() == StatusCodeNotFound) {
+            logger.log(System.Logger.Level.WARNING, String.format("Failed to retrieve feature toggles for client identifier %s from %s", config.getClientIdentifier(), manifestURI.toString()));
             return null;
         }
+        Optional<String> contentHashHeader = httpResponse.headers().firstValue("ContentHash");
+        if (contentHashHeader.isEmpty()) {
+            logger.log(System.Logger.Level.WARNING, String.format("Feature toggle response from %s did not contain expected ContentHash header", manifestURI.toString()));
+            return null;
+        }
+        var evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<FeatureToggleEvaluation>>() {});
+        return new FeatureToggles(evaluations, Base64.getDecoder().decode(contentHashHeader.get()));
     }
 
     String buildOctopusClientHeaderValue() {
