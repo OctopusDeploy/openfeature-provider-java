@@ -24,7 +24,7 @@ class OctopusContextProvider {
             var toggles = client.getFeatureToggleEvaluationManifest();
             currentContext = toggles == null ? OctopusContext.empty() : new OctopusContext(toggles);
         } catch (Exception e) {
-            logger.log(System.Logger.Level.ERROR, "Failed to retrieve feature toggles during initialization. Falling back to empty context. Default values will be used during evaluated.", e);
+            logger.log(System.Logger.Level.ERROR, "Failed to retrieve feature manifest during initialization. Falling back to empty context, defaults will be used during evaluation.", e);
             currentContext = OctopusContext.empty();
         }
 
