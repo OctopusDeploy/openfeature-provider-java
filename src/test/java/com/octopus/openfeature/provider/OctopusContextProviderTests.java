@@ -3,6 +3,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -165,7 +166,7 @@ class OctopusContextProviderTests {
         byte[] initialHash = {0x01, 0x02, 0x03, 0x04};
         byte[] updatedHash = {0x01, 0x02, 0x03, 0x05};
 
-        var logMessages = new ArrayList<String>();
+        var logMessages = new CopyOnWriteArrayList<String>();
         var julLogger = Logger.getLogger(OctopusClient.class.getName());
         var handler = new Handler() {
             @Override public void publish(LogRecord record) { logMessages.add(record.getMessage()); }
@@ -236,7 +237,7 @@ class OctopusContextProviderTests {
 
         byte[] contentHash = {0x01, 0x02, 0x03, 0x04};
 
-        var logRecords = new ArrayList<LogRecord>();
+        var logRecords = new CopyOnWriteArrayList<LogRecord>();
         var julLogger = Logger.getLogger(OctopusClient.class.getName());
         var handler = new Handler() {
             @Override public void publish(LogRecord record) { logRecords.add(record); }
