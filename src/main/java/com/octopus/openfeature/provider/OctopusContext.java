@@ -27,10 +27,14 @@ class OctopusContext {
         return featureToggles.getContentHash();
     }
 
-    ProviderEvaluation<Boolean> evaluate(String slug, Boolean defaultValue, EvaluationContext evaluationContext) {
-        var toggleValue = featureToggles.getEvaluations().stream()
+    FeatureToggleEvaluation findFeatureToggleBySlug(String slug) {
+        return featureToggles.getEvaluations().stream()
                 .filter(f -> f.getSlug().equalsIgnoreCase(slug))
                 .findFirst().orElse(null);
+    }
+
+    ProviderEvaluation<Boolean> evaluate(String slug, Boolean defaultValue, EvaluationContext evaluationContext) {
+        var toggleValue = findFeatureToggleBySlug(slug);
 
         if (toggleValue == null) {
             throw new FlagNotFoundError();
