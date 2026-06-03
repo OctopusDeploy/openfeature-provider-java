@@ -18,6 +18,12 @@ public class OctopusProvider extends EventProvider {
        this.contextProvider = new OctopusContextProvider(config, new OctopusClient(config));
     }
 
+    // For unit testing: accepts a pre-built context provider instead of constructing one from config.
+    OctopusProvider(OctopusContextProvider contextProvider) {
+        this.config = null;
+        this.contextProvider = contextProvider;
+    }
+
     @Override
     public Metadata getMetadata() { return () -> PROVIDER_NAME; }
 
