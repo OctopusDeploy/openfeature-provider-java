@@ -28,6 +28,12 @@ runs:
         gpg-private-key: ${{ inputs.gpg-private-key }}
         gpg-passphrase: MAVEN_GPG_PASSPHRASE # The name of the environment variable to use for GPG passphrase.
 
+        # server-id, server-username, and server-password need to be set to avoid errors from
+        # central-publishing-maven-plugin, even though the plugin is configured with skipPublishing=true
+        server-id: central
+        server-username: MAVEN_CENTRAL_USERNAME
+        server-password: MAVEN_CENTRAL_PASSWORD
+
     - name: Compute version
       id: version
       shell: bash
@@ -61,6 +67,8 @@ runs:
       # Octopus, so signing is not required.
       env:
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
+        MAVEN_CENTRAL_USERNAME: placeholder
+        MAVEN_CENTRAL_PASSWORD: placeholder
       run: mvn -B clean deploy ${{ github.event.pull_request.head.repo.fork == true && '-Dgpg.skip=true' || '' }}
 
     - name: Name the bundle
