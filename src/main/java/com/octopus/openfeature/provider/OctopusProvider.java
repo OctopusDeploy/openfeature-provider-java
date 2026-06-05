@@ -14,7 +14,7 @@ public class OctopusProvider extends EventProvider {
     private final OctopusContextProvider contextProvider;
     
     public OctopusProvider(OctopusConfiguration config) {
-       this.config = config;
+       this.config = config; 
        this.contextProvider = new OctopusContextProvider(config, new OctopusClient(config));
     }
 
@@ -69,6 +69,6 @@ public class OctopusProvider extends EventProvider {
         if (toggle == null) {
             return new FlagNotFoundError(flagKey);
         }
-        return new TypeMismatchError("Octopus Feature Toggles only supports boolean toggles.");
+        return new TypeMismatchError("Octopus only supports boolean flags.");
     }
 }
