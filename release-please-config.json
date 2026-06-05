@@ -1,0 +1,11 @@
+{
+    "bootstrap-sha": "26972923f3af69c245fd65e98821eb9992d8d57b",
+    "packages": {
+        ".": {
+            "release-type": "simple",
+            "extra-files": [
+                "pom.xml"
+            ]
+        }
+    }
+}
