@@ -109,5 +109,6 @@ runs:
       if: github.event.pull_request.head.repo.fork != true && (! contains(github.ref, '/dependabot/'))
       with:
         project: "OpenFeature Java Provider"
+        release_number: ${{ steps.version.outputs.version }}
         packages: |
           octopus-openfeature-provider-java:${{ steps.version.outputs.version }}
