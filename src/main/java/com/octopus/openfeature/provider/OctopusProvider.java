@@ -1,10 +1,6 @@
 package com.octopus.openfeature.provider;
 
-import dev.openfeature.sdk.EvaluationContext;
-import dev.openfeature.sdk.EventProvider;
-import dev.openfeature.sdk.Metadata;
-import dev.openfeature.sdk.ProviderEvaluation;
-import dev.openfeature.sdk.Value;
+import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 import dev.openfeature.sdk.exceptions.TypeMismatchError;
 
@@ -18,7 +14,7 @@ public class OctopusProvider extends EventProvider {
        this.contextProvider = new OctopusContextProvider(config, new OctopusClient(config));
     }
 
-    // For unit testing: accepts a pre-built context provider instead of constructing one from config.
+    // For testing: accepts a pre-built context provider instead of constructing one from config.
     OctopusProvider(OctopusContextProvider contextProvider) {
         this.config = null;
         this.contextProvider = contextProvider;

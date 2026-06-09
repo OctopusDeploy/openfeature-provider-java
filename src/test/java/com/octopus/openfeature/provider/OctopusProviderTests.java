@@ -23,7 +23,7 @@ class OctopusProviderTests {
                 List.of(new FeatureToggleEvaluation("feature-a", true, "key", Collections.emptyList(), 100)),
                 new byte[0]
         );
-        var provider = new OctopusProvider(new OctopusContextProvider(new OctopusContext(toggles)));
+        var provider = new OctopusProvider(new FakeOctopusContextProvider(new OctopusContext(toggles)));
         OpenFeatureAPI.getInstance().setProviderAndWait(provider);
         client = OpenFeatureAPI.getInstance().getClient();
     }

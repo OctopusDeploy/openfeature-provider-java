@@ -12,14 +12,6 @@ class OctopusContextProvider {
         this.config = config;
         this.client = client;
     }
-
-    // For unit testing: skips HTTP fetch and background refresh by pre-loading a known context.
-    OctopusContextProvider(OctopusContext context) {
-        this.config = null;
-        this.client = null;
-        this.currentContext = context;
-        this.initialized = true;
-    }
     
     OctopusContext getOctopusContext() { return currentContext; }
 
