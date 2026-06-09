@@ -1,6 +1,8 @@
 package com.octopus.openfeature.provider;
 
 import dev.openfeature.sdk.*;
+import dev.openfeature.sdk.exceptions.FlagNotFoundError;
+import dev.openfeature.sdk.exceptions.TypeMismatchError;
 
 public class OctopusProvider extends EventProvider {
     private static final String PROVIDER_NAME = "octopus-java-provider";
@@ -11,7 +13,13 @@ public class OctopusProvider extends EventProvider {
        this.config = config; 
        this.contextProvider = new OctopusContextProvider(config, new OctopusClient(config));
     }
-    
+
+    // For testing: accepts a pre-built context provider instead of constructing one from config.
+    OctopusProvider(OctopusContextProvider contextProvider) {
+        this.config = null;
+        this.contextProvider = contextProvider;
+    }
+
     @Override
     public Metadata getMetadata() { return () -> PROVIDER_NAME; }
 
@@ -33,22 +41,30 @@ public class OctopusProvider extends EventProvider {
     }
 
     @Override
-    public ProviderEvaluation<String> getStringEvaluation(String s, String s1, EvaluationContext evaluationContext) {
-        throw new UnsupportedOperationException("Only boolean values are currently supported");
+    public ProviderEvaluation<String> getStringEvaluation(String flagKey, String defaultValue, EvaluationContext evaluationContext) {
+        throw rejectNonBooleanEvaluation(flagKey);
     }
 
     @Override
-    public ProviderEvaluation<Integer> getIntegerEvaluation(String s, Integer integer, EvaluationContext evaluationContext) {
-        throw new UnsupportedOperationException("Only boolean values are currently supported");
+    public ProviderEvaluation<Integer> getIntegerEvaluation(String flagKey, Integer defaultValue, EvaluationContext evaluationContext) {
+        throw rejectNonBooleanEvaluation(flagKey);
     }
 
     @Override
-    public ProviderEvaluation<Double> getDoubleEvaluation(String s, Double aDouble, EvaluationContext evaluationContext) {
-        throw new UnsupportedOperationException("Only boolean values are currently supported");
+    public ProviderEvaluation<Double> getDoubleEvaluation(String flagKey, Double defaultValue, EvaluationContext evaluationContext) {
+        throw rejectNonBooleanEvaluation(flagKey);
     }
 
     @Override
-    public ProviderEvaluation<Value> getObjectEvaluation(String s, Value value, EvaluationContext evaluationContext) {
-        throw new UnsupportedOperationException("Only boolean values are currently supported");
+    public ProviderEvaluation<Value> getObjectEvaluation(String flagKey, Value defaultValue, EvaluationContext evaluationContext) {
+        throw rejectNonBooleanEvaluation(flagKey);
+    }
+
+    private RuntimeException rejectNonBooleanEvaluation(String flagKey) {
+        var toggle = contextProvider.getOctopusContext().findFeatureToggleBySlug(flagKey);
+        if (toggle == null) {
+            return new FlagNotFoundError(flagKey);
+        }
+        return new TypeMismatchError("Octopus only supports boolean flags.");
     }
 }
