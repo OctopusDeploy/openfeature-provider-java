@@ -1,0 +1,116 @@
+name: "Build, Test, Pack, and Deploy"
+description: "Builds, tests, GPG-signs, and assembles a Maven Central bundle, then pushes it to Octopus"
+
+inputs:
+  prerelease-tag:
+    description: "Optional prerelease tag (e.g., ci, pr.123.branch-name). If provided, generates a prerelease version. If empty, builds a release version."
+    required: false
+    default: ""
+  octopus-url:
+    description: "Octopus Deploy server URL"
+    required: true
+  gpg-private-key:
+    description: "GPG private key used to sign the Maven artifacts"
+    required: true
+  gpg-passphrase:
+    description: "Passphrase for the GPG private key"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Java
+      uses: actions/setup-java@v5
+      with:
+        distribution: "temurin"
+        java-version: "11"
+        cache: "maven"
+        gpg-private-key: ${{ inputs.gpg-private-key }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE # The name of the environment variable to use for GPG passphrase.
+
+        # server-id, server-username, and server-password need to be set to avoid errors from
+        # central-publishing-maven-plugin, even though the plugin is configured with skipPublishing=true
+        server-id: central
+        server-username: MAVEN_CENTRAL_USERNAME
+        server-password: MAVEN_CENTRAL_PASSWORD
+
+    - name: Compute version
+      id: version
+      shell: bash
+      run: |
+        BASE=$(grep -oP '<version>\K[^<]+(?=</version> <!-- x-release-please-version -->)' pom.xml)
+        if [ -z "$BASE" ]; then echo "Error: could not read x-release-please-version from pom.xml"; exit 1; fi
+
+        if [ -n "${{ inputs.prerelease-tag }}" ]; then
+          # Maven version chars are [A-Za-z0-9_.-]
+          VERSION="${BASE}-${{ inputs.prerelease-tag }}.$(date -u +%Y%m%dT%H%M%S).${GITHUB_SHA:0:9}"
+        else
+          VERSION="$BASE"
+        fi
+
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "Version: $VERSION"
+
+    - name: Stamp prerelease version
+      if: inputs.prerelease-tag != ''
+      shell: bash
+      # Must run before the deploy build: resource filtering bakes ${project.version} into
+      # src/main/resources/project.properties during process-resources, so the version has to be set on disk first.
+      run: mvn -B versions:set -DnewVersion=${{ steps.version.outputs.version }} -DgenerateBackupPoms=false
+
+    - name: Build, test, sign, and assemble bundle
+      shell: bash
+      # One full Maven lifecycle run.
+      #
+      # central-publishing-maven-plugin is configured with skipPublishing=true, so it assembles
+      # target/central-publishing/central-bundle.zip and generates checksums without uploading.
+      #
+      # GPG signing is skipped for fork PRs as forks don't receive repository secrets. These builds are not published to
+      # Octopus, so signing is not required.
+      env:
+        MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
+        MAVEN_CENTRAL_USERNAME: placeholder
+        MAVEN_CENTRAL_PASSWORD: placeholder
+      run: mvn -B clean deploy ${{ github.event.pull_request.head.repo.fork == true && '-Dgpg.skip=true' || '' }}
+
+    - name: Name the bundle
+      id: bundle
+      shell: bash
+      run: |
+        SRC="target/central-publishing/central-bundle.zip"
+        [ -f "$SRC" ] || { echo "Error: bundle not found at $SRC"; exit 1; }
+        DEST="octopus-openfeature-provider-java.${{ steps.version.outputs.version }}.zip"
+        mv "$SRC" "$DEST"
+        echo "path=$DEST" >> "$GITHUB_OUTPUT"
+        echo "Bundle: $DEST"
+
+    # Fork builds are not pushed to Octopus, so upload the bundle as an artifact instead.
+    - name: Publish bundle artifact
+      uses: actions/upload-artifact@v7
+      if: github.event.pull_request.head.repo.fork == true
+      with:
+        name: ${{ steps.bundle.outputs.path }}
+        path: ${{ steps.bundle.outputs.path }}
+
+    - name: Login to Octopus Deploy
+      if: github.event.pull_request.head.repo.fork != true && (! contains(github.ref, '/dependabot/'))
+      uses: OctopusDeploy/login@v2
+      with:
+        server: ${{ inputs.octopus-url }}
+        service_account_id: 42e00747-07e1-4214-979c-af3381e6d951
+
+    - name: Push to Octopus
+      uses: OctopusDeploy/push-package-action@v4
+      if: github.event.pull_request.head.repo.fork != true && (! contains(github.ref, '/dependabot/'))
+      with:
+        packages: |
+          ${{ steps.bundle.outputs.path }}
+
+    - name: Create Release in Octopus
+      uses: OctopusDeploy/create-release-action@v4
+      if: github.event.pull_request.head.repo.fork != true && (! contains(github.ref, '/dependabot/'))
+      with:
+        project: "OpenFeature Java Provider"
+        release_number: ${{ steps.version.outputs.version }}
+        packages: |
+          octopus-openfeature-provider-java:${{ steps.version.outputs.version }}
