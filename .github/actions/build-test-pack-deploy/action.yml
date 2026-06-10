@@ -54,13 +54,15 @@ runs:
     - name: Stamp prerelease version
       if: inputs.prerelease-tag != ''
       shell: bash
-      # Must run BEFORE the deploy build: resource filtering bakes ${project.version} into
+      # Must run before the deploy build: resource filtering bakes ${project.version} into
       # src/main/resources/project.properties during process-resources, so the version has to be set on disk first.
       run: mvn -B versions:set -DnewVersion=${{ steps.version.outputs.version }} -DgenerateBackupPoms=false
 
     - name: Build, test, sign, and assemble bundle
       shell: bash
-      # One full lifecycle run. central-publishing-maven-plugin is configured with skipPublishing=true, so it assembles
+      # One full Maven lifecycle run.
+      #
+      # central-publishing-maven-plugin is configured with skipPublishing=true, so it assembles
       # target/central-publishing/central-bundle.zip and generates checksums without uploading.
       #
       # GPG signing is skipped for fork PRs as forks don't receive repository secrets. These builds are not published to

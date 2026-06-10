@@ -54,12 +54,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <publishingServerId>central</publishingServerId>
-                    <!--
-                        CI builds the Maven Central bundle but never uploads it: Octopus owns the
-                        upload to the Sonatype Central Portal (see DEVEX-318). skipPublishing leaves
-                        target/central-publishing/central-bundle.zip on disk for Octopus to push.
-                    -->
-                    <skipPublishing>true</skipPublishing>
+                    <skipPublishing>true</skipPublishing> <!-- Octopus owns the upload to Maven Central. -->
                 </configuration>
             </plugin>
             <plugin>
