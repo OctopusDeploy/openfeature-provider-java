@@ -14,6 +14,10 @@ module.exports = {
   // Add labels to PRs
   labels: ['dependencies'],
 
+  // Wait until a release has been published for at least 2 days before updating,
+  // to avoid picking up versions that get yanked or hotfixed shortly after release.
+  minimumReleaseAge: '2 days',
+
   // Enable vulnerability alerts
   osvVulnerabilityAlerts: true,
 
