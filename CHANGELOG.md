@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.1](https://github.com/OctopusDeploy/openfeature-provider-java/compare/v1.0.0...v1.0.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.21.4 [security] ([#24](https://github.com/OctopusDeploy/openfeature-provider-java/issues/24)) ([8ff6288](https://github.com/OctopusDeploy/openfeature-provider-java/commit/8ff628897e4995d20a573d4ba4975a1a61162eeb))
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.21.5 [security] ([#33](https://github.com/OctopusDeploy/openfeature-provider-java/issues/33)) ([8168a03](https://github.com/OctopusDeploy/openfeature-provider-java/commit/8168a0366fbad21265a63a61a1e86558794b90f0))
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.22.1 ([#37](https://github.com/OctopusDeploy/openfeature-provider-java/issues/37)) ([bf9056e](https://github.com/OctopusDeploy/openfeature-provider-java/commit/bf9056e09a848eb17c32fa2889306a6988760477))
+* **deps:** update dependency commons-codec:commons-codec to v1.22.0 ([#38](https://github.com/OctopusDeploy/openfeature-provider-java/issues/38)) ([e79cc55](https://github.com/OctopusDeploy/openfeature-provider-java/commit/e79cc55ccb62fb0d8badeef1642eb03c7c148229))
+
 ## [1.0.0](https://github.com/OctopusDeploy/openfeature-provider-java/compare/0.3.0...v1.0.0) (2026-06-15)
 
 
