@@ -25,12 +25,18 @@ module.exports = {
   semanticCommits: 'enabled',
 
   // Extend with recommended config
-  extends: ['config:recommended'],
+  globalExtends: ['config:recommended'],
 
   // Only manage Maven deps and GitHub Actions (leaves the `specification` submodule alone)
   enabledManagers: ['maven', 'github-actions'],
 
   packageRules: [
+    {
+      // OpenFeature SDK updates are worth releasing as a minor version, even if not breaking
+      matchPackageNames: ['dev.openfeature:sdk'],
+      matchUpdateTypes: ['minor', 'patch'],
+      semanticCommitType: 'feat',
+    },
     {
       // GitHub Actions: pin third-party actions to a commit SHA for security.
       matchManagers: ['github-actions'],
