@@ -25,7 +25,7 @@ module.exports = {
   semanticCommits: 'enabled',
 
   // Extend with recommended config
-  extends: ['config:recommended'],
+  globalExtends: ['config:recommended'],
 
   // Only manage Maven deps and GitHub Actions (leaves the `specification` submodule alone)
   enabledManagers: ['maven', 'github-actions'],
