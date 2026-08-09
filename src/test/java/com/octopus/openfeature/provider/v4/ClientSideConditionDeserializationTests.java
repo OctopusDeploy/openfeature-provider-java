@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.octopus.openfeature.provider.TestObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.InputStream;
 import java.util.List;
@@ -114,12 +116,21 @@ class ClientSideConditionDeserializationTests {
                         unknown -> assertThat(unknown.getType()).hasValue("Percentage-By-Context"));
     }
 
-    @Test
-    void shouldDeserializeNonStringDiscriminatorToUnknownConditionCarryingNoType() throws Exception {
-        // A type that is not a string is a response no server sends, so it is kept distinct from a
-        // merely unrecognised one: it carries no type and so fails evaluation rather than degrading.
-        var condition = objectMapper.readValue(
-                resource("condition-discriminator-not-a-string.json"), ClientSideCondition.class);
+    // A discriminator that is not a string is a response no server sends, so it is kept distinct from
+    // a merely unrecognised one: it carries no type, and so fails evaluation rather than degrading
+    // quietly. This is the distinction Jackson's own polymorphic handling cannot express — it coerces
+    // any scalar type id to a string, which would make 123 indistinguishable from "123" — and the
+    // reason ClientSideConditionDeserializer is written by hand.
+    @ParameterizedTest(name = "[{index}] {0}")
+    @ValueSource(strings = {
+            "{ 'type': 123, 'percentage': 50 }",
+            "{ 'type': true, 'percentage': 50 }",
+            "{ 'type': null, 'percentage': 50 }",
+            "{ 'type': {}, 'percentage': 50 }",
+            "{ 'type': [], 'percentage': 50 }"
+    })
+    void shouldDeserializeUnusableDiscriminatorToUnknownConditionCarryingNoType(String conditionJson) throws Exception {
+        var condition = objectMapper.readValue(Contexts.json(conditionJson), ClientSideCondition.class);
 
         assertThat(condition)
                 .isInstanceOfSatisfying(UnknownCondition.class,
