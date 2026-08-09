@@ -1,0 +1,19 @@
+{
+  "slug": "my-feature",
+  "evaluationKey": "0f8fad5b-d9cb-469f-a165-70867728950e",
+  "rules": [
+    {
+      "name": "Rule 1",
+      "conditions": [
+        {
+          "type": "percentage-by-context",
+          "percentage": 50
+        },
+        {
+          "type": "some-future-condition",
+          "someField": "someValue"
+        }
+      ]
+    }
+  ]
+}

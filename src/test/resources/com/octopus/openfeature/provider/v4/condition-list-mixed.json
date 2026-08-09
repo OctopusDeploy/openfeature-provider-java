@@ -1,0 +1,20 @@
+[
+  {
+    "type": "percentage-by-context",
+    "percentage": 25
+  },
+  {
+    "type": "context-attribute-is-one-of",
+    "key": "user-id",
+    "values": [
+      "1234"
+    ]
+  },
+  {
+    "type": "context-attribute-is-not-one-of",
+    "key": "region",
+    "values": [
+      "au"
+    ]
+  }
+]
