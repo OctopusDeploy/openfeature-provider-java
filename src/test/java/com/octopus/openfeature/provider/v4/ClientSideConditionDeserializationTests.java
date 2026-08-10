@@ -93,34 +93,11 @@ class ClientSideConditionDeserializationTests {
                         unknown -> assertThat(unknown.getType()).isEmpty());
     }
 
-    @Test
-    void shouldDeserializeConditionWhenDiscriminatorPropertyUsesDifferentCapitalisation() throws Exception {
-        // The mapper accepts case-insensitive property names, and that extends to the discriminator.
-        var condition = objectMapper.readValue(
-                resource("condition-discriminator-different-capitalisation.json"), ClientSideCondition.class);
-
-        assertThat(condition)
-                .isInstanceOfSatisfying(PercentageByContextCondition.class,
-                        percentage -> assertThat(percentage.getPercentage()).hasValue(50));
-    }
-
-    @Test
-    void shouldTreatDiscriminatorValueWithDifferentCapitalisationAsUnknownCondition() throws Exception {
-        // Unlike property names, discriminator values are matched exactly — anything else is an
-        // unrecognised condition, which degrades safely rather than failing the response.
-        var condition = objectMapper.readValue(
-                resource("condition-discriminator-value-different-capitalisation.json"), ClientSideCondition.class);
-
-        assertThat(condition)
-                .isInstanceOfSatisfying(UnknownCondition.class,
-                        unknown -> assertThat(unknown.getType()).hasValue("Percentage-By-Context"));
-    }
-
     // A discriminator that is not a string is a response no server sends, so it is kept distinct from
     // a merely unrecognised one: it carries no type, and so fails evaluation rather than degrading
     // quietly. This is the distinction Jackson's own polymorphic handling cannot express — it coerces
     // any scalar type id to a string, which would make 123 indistinguishable from "123" — and the
-    // reason ClientSideConditionDeserializer is written by hand.
+    // reason ClientSideConditionDeserializer is written by hand rather than driven by @JsonTypeInfo.
     @ParameterizedTest(name = "[{index}] {0}")
     @ValueSource(strings = {
             "{ 'type': 123, 'percentage': 50 }",

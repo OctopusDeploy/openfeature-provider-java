@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Selects the concrete {@link ClientSideCondition} from the camelCase {@code type} discriminator. An
@@ -30,7 +29,8 @@ final class ClientSideConditionDeserializer extends JsonDeserializer<ClientSideC
         ObjectCodec codec = parser.getCodec();
         JsonNode node = codec.readTree(parser);
 
-        JsonNode discriminator = findDiscriminator(node);
+        // Matched exactly, as the .NET provider's converter does: the server always sends "type".
+        JsonNode discriminator = node.get(DISCRIMINATOR);
         String type = discriminator != null && discriminator.isTextual() ? discriminator.textValue() : null;
 
         // Deserializing the concrete type targets that type directly, so this deserializer — registered
@@ -49,20 +49,5 @@ final class ClientSideConditionDeserializer extends JsonDeserializer<ClientSideC
             default:
                 return new UnknownCondition(type);
         }
-    }
-
-    /**
-     * The discriminator, matched without regard to case as the provider's mapper matches every other
-     * property name.
-     */
-    private static JsonNode findDiscriminator(JsonNode node) {
-        var fields = node.fields();
-        while (fields.hasNext()) {
-            Map.Entry<String, JsonNode> field = fields.next();
-            if (DISCRIMINATOR.equalsIgnoreCase(field.getKey())) {
-                return field.getValue();
-            }
-        }
-        return null;
     }
 }
