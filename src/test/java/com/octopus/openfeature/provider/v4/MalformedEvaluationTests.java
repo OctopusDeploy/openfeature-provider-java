@@ -56,6 +56,8 @@ class MalformedEvaluationTests {
                 // Neither shape, or both at once.
                 Arguments.of("{ 'slug': 'my-feature' }",
                         "The flag has neither a value nor rules."),
+                Arguments.of("{ 'slug': 'my-feature', 'value': true }",
+                        "The flag has a value but has no reason."),
                 Arguments.of("{ 'slug': 'my-feature', 'value': true, 'reason': 'Enabled.', 'evaluationKey': 'evaluation-key', 'rules': [ { 'name': 'Beta ring', 'conditions': [ { 'type': 'context-attribute-is-one-of', 'key': 'ring', 'values': [ 'beta' ] } ] } ] }",
                         "The flag has both a server-resolved value and client-side rules."),
                 // Deferred, but not evaluable.

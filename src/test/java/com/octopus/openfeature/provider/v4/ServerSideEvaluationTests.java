@@ -1,5 +1,7 @@
 package com.octopus.openfeature.provider.v4;
 
+import dev.openfeature.sdk.ErrorCode;
+import dev.openfeature.sdk.exceptions.ParseError;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -7,6 +9,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * {@link ServerSideEvaluation#evaluate} against a well-formed response. Rules and conditions have
@@ -37,12 +40,11 @@ class ServerSideEvaluationTests {
     }
 
     @Test
-    void serverResolvedFlagWithNoReasonStillResolves() {
-        var result = serverResolved(true, null).evaluate(Contexts.openFeature(null));
-
-        assertThat(result.getValue()).isTrue();
-        assertThat(result.getReason()).isNull();
-        assertThat(result.getErrorCode()).isNull();
+    void serverResolvedFlagWithNoReasonThrowsAParseError() {
+        assertThatThrownBy(() -> serverResolved(true, null).evaluate(Contexts.openFeature(null)))
+                .isInstanceOf(ParseError.class)
+                .hasMessage("The flag has a value but has no reason.")
+                .extracting(thrown -> ((ParseError) thrown).getErrorCode()).isEqualTo(ErrorCode.PARSE_ERROR);
     }
 
     @Test

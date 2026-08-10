@@ -65,6 +65,10 @@ final class ServerSideEvaluation {
      */
     ProviderEvaluation<Boolean> evaluate(EvaluationContext context) {
         if (value != null) {
+            if (reason == null) {
+                throw new ParseError("The flag has a value but has no reason.");
+            }
+
             if (evaluationKey != null || rules != null) {
                 throw new ParseError("The flag has both a server-resolved value and client-side rules.");
             }
