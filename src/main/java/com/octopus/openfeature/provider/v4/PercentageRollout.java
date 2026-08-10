@@ -1,4 +1,4 @@
-package com.octopus.openfeature.provider;
+package com.octopus.openfeature.provider.v4;
 
 import org.apache.commons.codec.digest.MurmurHash3;
 
@@ -9,15 +9,13 @@ import java.nio.charset.StandardCharsets;
  * the targeting key keeps a bucket stable across evaluations, while giving each flag an independent
  * spread of targeting keys.
  *
- * <p>Shared by v3 and v4 so a rollout lands on the same users whichever flag version resolved it, and
- * matching the equivalent implementations in the other Octopus OpenFeature provider libraries.
- *
- * <p>This type is public only because Java package access is not hierarchical: the v4 evaluation
- * lives in a sub-package and cannot see package-private members here. It is internal to the provider
- * and not part of the supported API. Once v3 no longer needs it, it belongs in the v4 package as a
- * package-private type, as the .NET provider has it.
+ * <p>The v3 path has its own copy of this hash in {@code OctopusContext}, because Java package access
+ * is not hierarchical and a package-private type here is invisible to that package. Keeping both
+ * package-private is worth the duplication: the alternative is a public type that consumers could
+ * bind to, and this one is due to disappear along with v3. Both copies are pinned to the same shared
+ * vectors — see {@code RolloutVectors} in the tests — so the two cannot drift apart unnoticed.
  */
-public final class PercentageRollout {
+final class PercentageRollout {
 
     private PercentageRollout() {
     }
@@ -26,17 +24,17 @@ public final class PercentageRollout {
      * Whether {@code targetingKey} falls within the first {@code percentage} percent of targeting keys
      * for the flag identified by {@code evaluationKey}.
      */
-    public static boolean includes(String evaluationKey, String targetingKey, int percentage) {
+    static boolean includes(String evaluationKey, String targetingKey, int percentage) {
         return getNormalizedNumber(evaluationKey, targetingKey) <= percentage;
     }
 
     /**
      * A deterministic bucket in the inclusive range 1–100 for the given evaluation and targeting keys.
      *
-     * <p>Exposed rather than private so the shared cross-library test vectors can assert on the bucket
-     * itself, and because v3 compares against it directly.
+     * <p>Exposed rather than private so the shared cross-library vectors can assert on the bucket
+     * itself, as the other provider libraries do.
      */
-    public static int getNormalizedNumber(String evaluationKey, String targetingKey) {
+    static int getNormalizedNumber(String evaluationKey, String targetingKey) {
         byte[] bytes = (evaluationKey + ":" + targetingKey).getBytes(StandardCharsets.UTF_8);
 
         // MurmurHash3 32-bit, seed 0. hash32x86 processes tail bytes in little-endian order,

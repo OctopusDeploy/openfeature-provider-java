@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.octopus.openfeature.provider.PercentageRollout;
 import dev.openfeature.sdk.EvaluationContext;
 import dev.openfeature.sdk.exceptions.ParseError;
 

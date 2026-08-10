@@ -3,7 +3,9 @@ package com.octopus.openfeature.provider;
 import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 import dev.openfeature.sdk.exceptions.ParseError;
+import org.apache.commons.codec.digest.MurmurHash3;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -96,9 +98,19 @@ class OctopusContext {
                 || evaluation.getSegments().isEmpty();
     }
 
-    // Delegates so v3 and v4 bucket identically off one implementation. See PercentageRollout.
     static int getNormalizedNumber(String evaluationKey, String targetingKey) {
-        return PercentageRollout.getNormalizedNumber(evaluationKey, targetingKey);
+        byte[] bytes = (evaluationKey + ":" + targetingKey).getBytes(StandardCharsets.UTF_8);
+
+        // MurmurHash3 32-bit, seed 0. hash32x86 processes tail bytes in little-endian order,
+        // matching the reference C spec and equivalent to .NET's MurmurHash.Create32() +
+        // BinaryPrimitives.ReadUInt32LittleEndian().
+        int hash = MurmurHash3.hash32x86(bytes, 0, bytes.length, 0);
+
+        // Java has no unsigned integer type. Integer.toUnsignedLong() reinterprets the signed
+        // int as an unsigned 32-bit value (widened to long) — equivalent to casting to uint in C#.
+        long unsignedHash = Integer.toUnsignedLong(hash);
+
+        return (int) (unsignedHash % 100) + 1;
     }
 
     static boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {
