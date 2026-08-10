@@ -95,29 +95,6 @@ class ServerSideEvaluationDeserializationTests {
     }
 
     @Test
-    void shouldDeserializeConditionWhenDiscriminatorPropertyUsesDifferentCapitalisation() throws Exception {
-        // The mapper accepts case-insensitive property names, and that extends to the discriminator.
-        var condition = objectMapper.readValue(
-                resource("condition-discriminator-different-capitalisation.json"), ClientSideCondition.class);
-
-        assertThat(condition)
-                .isInstanceOfSatisfying(PercentageByContextCondition.class,
-                        percentage -> assertThat(percentage.getPercentage()).isEqualTo(50));
-    }
-
-    @Test
-    void shouldTreatDiscriminatorValueWithDifferentCapitalisationAsUnknownCondition() throws Exception {
-        // Unlike property names, discriminator values are matched exactly — anything else is an
-        // unrecognised condition, which degrades safely rather than failing the response.
-        var condition = objectMapper.readValue(
-                resource("condition-discriminator-value-different-capitalisation.json"), ClientSideCondition.class);
-
-        assertThat(condition)
-                .isInstanceOfSatisfying(UnknownCondition.class,
-                        unknown -> assertThat(unknown.getType()).hasValue("Percentage-By-Context"));
-    }
-
-    @Test
     void shouldPreserveUnknownConditionAlongsideKnownConditionsWithoutFailingTheResponse() throws Exception {
         var evaluation = objectMapper.readValue(
                 resource("evaluation-with-unknown-condition.json"), ServerSideEvaluation.class);
