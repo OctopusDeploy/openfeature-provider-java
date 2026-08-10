@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * Matches when the context attribute {@code key} is not one of {@code values}. A missing attribute
- * matches, mirroring OctoToggle's {@code TenantIsNotOneOf}, where an untenanted caller always
  * matches.
  */
 @JsonIgnoreProperties("type") // The discriminator selects this type; it is not modelled as a property.
