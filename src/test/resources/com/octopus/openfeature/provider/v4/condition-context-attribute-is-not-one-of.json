@@ -1,0 +1,8 @@
+{
+  "type": "context-attribute-is-not-one-of",
+  "key": "region",
+  "values": [
+    "us",
+    "eu"
+  ]
+}

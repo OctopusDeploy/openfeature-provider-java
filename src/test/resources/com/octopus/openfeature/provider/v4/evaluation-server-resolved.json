@@ -1,0 +1,5 @@
+{
+  "slug": "my-feature",
+  "value": true,
+  "reason": "The flag is enabled for this environment."
+}
