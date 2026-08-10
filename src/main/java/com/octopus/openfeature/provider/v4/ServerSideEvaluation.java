@@ -23,7 +23,7 @@ final class ServerSideEvaluation {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     ServerSideEvaluation(
-            @JsonProperty(value = "slug", required = true) String slug,
+            @JsonProperty("slug") String slug,
             @JsonProperty("value") Boolean value,
             @JsonProperty("reason") String reason,
             @JsonProperty("evaluationKey") String evaluationKey,

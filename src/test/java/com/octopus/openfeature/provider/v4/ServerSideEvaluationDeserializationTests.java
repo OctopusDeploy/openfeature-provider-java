@@ -2,7 +2,6 @@ package com.octopus.openfeature.provider.v4;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.octopus.openfeature.provider.TestObjectMapper;
 import org.junit.jupiter.api.Test;
 
@@ -99,10 +98,26 @@ class ServerSideEvaluationDeserializationTests {
     }
 
     @Test
-    void shouldFailDeserializationWhenSlugIsMissing() {
-        assertThatThrownBy(() -> objectMapper.readValue(
-                resource("evaluation-missing-slug.json"), ServerSideEvaluation.class))
-                .isInstanceOf(MismatchedInputException.class);
+    void shouldDeserializeEvaluationWithoutASlugRatherThanFailingTheResponse() throws Exception {
+        // No property is required at parse time: a malformed flag is reported when it is evaluated, so
+        // it costs only itself rather than every other flag in the response.
+        var evaluation = objectMapper.readValue(
+                resource("evaluation-missing-slug.json"), ServerSideEvaluation.class);
+
+        assertThat(evaluation.getSlug()).isNull();
+        assertThat(evaluation.getValue()).hasValue(true);
+    }
+
+    @Test
+    void shouldDeserializeEveryFlagWhenOneOfThemIsMissingItsSlug() throws Exception {
+        var evaluations = objectMapper.readValue(
+                resource("evaluation-list-one-missing-slug.json"),
+                new TypeReference<List<ServerSideEvaluation>>() {}
+        );
+
+        assertThat(evaluations).hasSize(2);
+        assertThat(evaluations.get(0).getSlug()).isNull();
+        assertThat(evaluations.get(1).getSlug()).isEqualTo("well-formed-feature");
     }
 
     @Test
