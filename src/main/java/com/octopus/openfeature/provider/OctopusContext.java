@@ -96,9 +96,9 @@ class OctopusContext {
                 || evaluation.getSegments().isEmpty();
     }
 
-    // Delegates so v3 and v4 bucket identically off one implementation. See RolloutBucketing.
+    // Delegates so v3 and v4 bucket identically off one implementation. See PercentageRollout.
     static int getNormalizedNumber(String evaluationKey, String targetingKey) {
-        return RolloutBucketing.getNormalizedNumber(evaluationKey, targetingKey);
+        return PercentageRollout.getNormalizedNumber(evaluationKey, targetingKey);
     }
 
     static boolean matchesSegment(EvaluationContext evaluationContext, List<Segment> segments) {

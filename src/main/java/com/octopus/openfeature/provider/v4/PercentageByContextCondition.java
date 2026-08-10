@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.octopus.openfeature.provider.RolloutBucketing;
+import com.octopus.openfeature.provider.PercentageRollout;
 import dev.openfeature.sdk.EvaluationContext;
 import dev.openfeature.sdk.exceptions.ParseError;
 
@@ -55,6 +55,6 @@ final class PercentageByContextCondition extends ClientSideCondition {
         }
 
         // Shared with v3 so a rollout lands on the same users across versions and provider libraries.
-        return RolloutBucketing.getNormalizedNumber(context.getEvaluationKey(), targetingKey) <= percentage;
+        return PercentageRollout.includes(context.getEvaluationKey(), targetingKey, percentage);
     }
 }
