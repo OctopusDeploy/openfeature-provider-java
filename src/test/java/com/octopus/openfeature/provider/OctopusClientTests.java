@@ -1,6 +1,7 @@
 package com.octopus.openfeature.provider;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import dev.openfeature.sdk.exceptions.ParseError;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class OctopusClientTests {
 
@@ -121,15 +123,40 @@ class OctopusClientTests {
     }
 
     @Test
-    void getServerSideEvaluations_whenTheBodyIsEmpty_reportsAFailedFetch() throws Exception {
+    void getServerSideEvaluations_whenOneEvaluationCannotBeRead_stillReturnsTheOthers() throws Exception {
+        // A wrongly-typed field fails while the response is being read, so it cannot be reported per flag
+        // at evaluation time the way a missing field is. Reading the evaluations one at a time keeps it
+        // from costing every other flag in the response.
+        wireMock.stubFor(get(anyUrl()).willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withHeader("ContentHash", CONTENT_HASH)
+                .withBody("[{\"slug\":\"broken-feature\",\"evaluationKey\":\"k\",\"rules\":[{\"name\":\"r\",\"conditions\":[{\"type\":\"percentage-by-context\",\"percentage\":\"lots\"}]}]},"
+                        + "{\"slug\":\"well-formed-feature\",\"value\":true,\"reason\":\"The flag is enabled for this environment.\"}]")));
+
+        var response = clientForServer().getServerSideEvaluations();
+
+        assertThat(response).isNotNull();
+        assertThat(response.getEvaluations()).hasSize(2);
+
+        var evaluations = new OctopusContext(response);
+        assertThat(evaluations.evaluate("well-formed-feature", null).getValue())
+                .as("the well-formed flag is unaffected").isTrue();
+        assertThatThrownBy(() -> evaluations.evaluate("broken-feature", null))
+                .as("the unreadable flag reports a parse error of its own, as other malformed shapes do")
+                .isInstanceOf(ParseError.class);
+    }
+
+    @Test
+    void getServerSideEvaluations_whenTheBodyIsNotAListOfEvaluations_reportsAFailedFetch() throws Exception {
         wireMock.stubFor(get(anyUrl()).willReturn(aResponse()
                 .withStatus(200)
                 .withHeader("Content-Type", "application/json")
                 .withHeader("ContentHash", CONTENT_HASH)
                 .withBody("null")));
 
-        // Null rather than an empty response: the cache keeps refetching instead of settling on a content
-        // hash that the check endpoint will report as unchanged forever.
+        // Null rather than an empty response: the cache keeps refetching instead of settling on a
+        // content hash that the check endpoint will report as unchanged forever.
         assertThat(clientForServer().getServerSideEvaluations()).isNull();
     }
 

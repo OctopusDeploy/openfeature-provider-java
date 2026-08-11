@@ -1,6 +1,6 @@
 package com.octopus.openfeature.provider;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -79,15 +79,57 @@ class OctopusClient {
             logger.log(System.Logger.Level.WARNING, String.format("Feature flag response from %s did not contain expected ContentHash header", evaluationsURI.toString()));
             return null;
         }
-        var evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<ServerSideEvaluation>>() {});
+        var evaluations = readEvaluations(httpResponse.body(), evaluationsURI);
         if (evaluations == null) {
             // Returning null leaves the cache on its previous context, or on the empty one, both of
             // which keep refetching. Storing a response with a usable content hash would not: the check
             // endpoint would report no change and the provider would never recover.
-            logger.log(System.Logger.Level.WARNING, String.format("Feature flag response content from %s was empty", evaluationsURI.toString()));
             return null;
         }
         return new EvaluationResponse(evaluations, Base64.getDecoder().decode(contentHashHeader.get()));
+    }
+
+    /**
+     * Reads the evaluations one at a time, so a flag whose payload cannot be read costs only itself.
+     *
+     * <p>Deserializing the array in one call would abort on the first wrongly-typed field anywhere in it
+     * — {@code "percentage": "lots"} on one flag would leave every flag in the response falling back to
+     * the caller's default. Missing fields are already reported per flag, when the flag is evaluated;
+     * this extends the same containment to fields of the wrong type, which cannot get that far because
+     * they fail while being read.
+     *
+     * <p>Returns null when the response itself is unusable, which the caller treats as a failed fetch.
+     */
+    private List<ServerSideEvaluation> readEvaluations(String body, URI evaluationsURI) throws IOException {
+        var root = OctopusObjectMapper.INSTANCE.readTree(body);
+        if (root == null || !root.isArray()) {
+            logger.log(System.Logger.Level.WARNING, String.format("Feature flag response content from %s was not a list of evaluations", evaluationsURI.toString()));
+            return null;
+        }
+
+        var evaluations = new ArrayList<ServerSideEvaluation>();
+        for (var element : root) {
+            try {
+                evaluations.add(OctopusObjectMapper.INSTANCE.treeToValue(element, ServerSideEvaluation.class));
+            } catch (JsonProcessingException e) {
+                // Kept, not dropped: the flag reports a parse error of its own, as every other malformed
+                // shape does, rather than looking like a flag the server never sent. Without a slug there
+                // is nothing to report it against, so it can only be left out.
+                if (!element.path("slug").isTextual()) {
+                    logger.log(System.Logger.Level.WARNING, String.format(
+                            "Could not read an unnamed evaluation from %s, so it has been left out: %s",
+                            evaluationsURI.toString(), e.getOriginalMessage()));
+                    continue;
+                }
+
+                var slug = element.path("slug").asText();
+                logger.log(System.Logger.Level.WARNING, String.format(
+                        "Could not read the evaluation for feature flag %s from %s: %s",
+                        slug, evaluationsURI.toString(), e.getOriginalMessage()));
+                evaluations.add(ServerSideEvaluation.unreadable(slug, "The flag could not be read."));
+            }
+        }
+        return evaluations;
     }
 
     String buildOctopusClientHeaderValue() {
