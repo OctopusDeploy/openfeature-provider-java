@@ -112,12 +112,21 @@ class OctopusClient {
             try {
                 evaluations.add(OctopusObjectMapper.INSTANCE.treeToValue(element, ServerSideEvaluation.class));
             } catch (JsonProcessingException e) {
-                // Left out of the response rather than guessed at: the flag resolves as not found, which
-                // the caller sees as their default value, and the slug is logged so it can be traced.
-                var slug = element.path("slug").isTextual() ? element.path("slug").asText() : "<unnamed>";
+                // Kept, not dropped: the flag reports a parse error of its own, as every other malformed
+                // shape does, rather than looking like a flag the server never sent. Without a slug there
+                // is nothing to report it against, so it can only be left out.
+                if (!element.path("slug").isTextual()) {
+                    logger.log(System.Logger.Level.WARNING, String.format(
+                            "Could not read an unnamed evaluation from %s, so it has been left out: %s",
+                            evaluationsURI.toString(), e.getOriginalMessage()));
+                    continue;
+                }
+
+                var slug = element.path("slug").asText();
                 logger.log(System.Logger.Level.WARNING, String.format(
-                        "Could not read the evaluation for feature flag %s from %s, so it will resolve as not found: %s",
+                        "Could not read the evaluation for feature flag %s from %s: %s",
                         slug, evaluationsURI.toString(), e.getOriginalMessage()));
+                evaluations.add(ServerSideEvaluation.unreadable(slug, "The flag could not be read."));
             }
         }
         return evaluations;

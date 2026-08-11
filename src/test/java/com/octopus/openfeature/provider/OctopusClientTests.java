@@ -1,6 +1,7 @@
 package com.octopus.openfeature.provider;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import dev.openfeature.sdk.exceptions.ParseError;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class OctopusClientTests {
 
@@ -135,8 +137,14 @@ class OctopusClientTests {
         var response = clientForServer().getServerSideEvaluations();
 
         assertThat(response).isNotNull();
-        assertThat(response.getEvaluations()).singleElement()
-                .satisfies(evaluation -> assertThat(evaluation.getSlug()).isEqualTo("well-formed-feature"));
+        assertThat(response.getEvaluations()).hasSize(2);
+
+        var evaluations = new OctopusContext(response);
+        assertThat(evaluations.evaluate("well-formed-feature", null).getValue())
+                .as("the well-formed flag is unaffected").isTrue();
+        assertThatThrownBy(() -> evaluations.evaluate("broken-feature", null))
+                .as("the unreadable flag reports a parse error of its own, as other malformed shapes do")
+                .isInstanceOf(ParseError.class);
     }
 
     @Test
