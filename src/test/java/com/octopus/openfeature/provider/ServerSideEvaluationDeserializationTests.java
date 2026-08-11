@@ -1,8 +1,7 @@
-package com.octopus.openfeature.provider.v4;
+package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.octopus.openfeature.provider.TestObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
@@ -18,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class ServerSideEvaluationDeserializationTests {
 
-    private final ObjectMapper objectMapper = TestObjectMapper.INSTANCE;
+    private final ObjectMapper objectMapper = OctopusObjectMapper.INSTANCE;
 
     private InputStream resource(String name) {
         return getClass().getResourceAsStream(name);
@@ -27,7 +26,7 @@ class ServerSideEvaluationDeserializationTests {
     @Test
     void shouldDeserializeServerResolvedEvaluation() throws Exception {
         var evaluation = objectMapper.readValue(
-                resource("evaluation-server-resolved.json"), ServerSideEvaluation.class);
+                resource("v4-evaluation-server-resolved.json"), ServerSideEvaluation.class);
 
         assertThat(evaluation.getSlug()).isEqualTo("my-feature");
         assertThat(evaluation.getValue()).hasValue(true);
@@ -39,7 +38,7 @@ class ServerSideEvaluationDeserializationTests {
     @Test
     void shouldDeserializeEvaluationDeferredToTheClientWithPolymorphicConditions() throws Exception {
         var evaluation = objectMapper.readValue(
-                resource("evaluation-deferred-to-client.json"), ServerSideEvaluation.class);
+                resource("v4-evaluation-deferred-to-client.json"), ServerSideEvaluation.class);
 
         assertThat(evaluation.getSlug()).isEqualTo("my-feature");
         assertThat(evaluation.getEvaluationKey()).hasValue("0f8fad5b-d9cb-469f-a165-70867728950e");
@@ -66,7 +65,7 @@ class ServerSideEvaluationDeserializationTests {
     @Test
     void shouldPreserveUnknownConditionAlongsideKnownConditionsWithoutFailingTheResponse() throws Exception {
         var evaluation = objectMapper.readValue(
-                resource("evaluation-with-unknown-condition.json"), ServerSideEvaluation.class);
+                resource("v4-evaluation-with-unknown-condition.json"), ServerSideEvaluation.class);
 
         var conditions = evaluation.getRules().orElseThrow().get(0).getConditions();
 
@@ -79,7 +78,7 @@ class ServerSideEvaluationDeserializationTests {
     @Test
     void shouldDeserializeEvaluationsResponseAsListOfEvaluations() throws Exception {
         var evaluations = objectMapper.readValue(
-                resource("evaluation-list.json"),
+                resource("v4-evaluation-list.json"),
                 new TypeReference<List<ServerSideEvaluation>>() {}
         );
 
@@ -102,7 +101,7 @@ class ServerSideEvaluationDeserializationTests {
         // No property is required at parse time: a malformed flag is reported when it is evaluated, so
         // it costs only itself rather than every other flag in the response.
         var evaluation = objectMapper.readValue(
-                resource("evaluation-missing-slug.json"), ServerSideEvaluation.class);
+                resource("v4-evaluation-missing-slug.json"), ServerSideEvaluation.class);
 
         assertThat(evaluation.getSlug()).isNull();
         assertThat(evaluation.getValue()).hasValue(true);
@@ -111,7 +110,7 @@ class ServerSideEvaluationDeserializationTests {
     @Test
     void shouldDeserializeEveryFlagWhenOneOfThemIsMissingItsSlug() throws Exception {
         var evaluations = objectMapper.readValue(
-                resource("evaluation-list-one-missing-slug.json"),
+                resource("v4-evaluation-list-one-missing-slug.json"),
                 new TypeReference<List<ServerSideEvaluation>>() {}
         );
 
@@ -123,7 +122,7 @@ class ServerSideEvaluationDeserializationTests {
     @Test
     void shouldIgnoreExtraneousProperties() throws Exception {
         var evaluation = objectMapper.readValue(
-                resource("evaluation-with-extraneous-properties.json"), ServerSideEvaluation.class);
+                resource("v4-evaluation-with-extraneous-properties.json"), ServerSideEvaluation.class);
 
         assertThat(evaluation.getSlug()).isEqualTo("my-feature");
 
@@ -136,7 +135,7 @@ class ServerSideEvaluationDeserializationTests {
     @Test
     void shouldExposeConditionsAsImmutableLists() throws Exception {
         var evaluation = objectMapper.readValue(
-                resource("evaluation-deferred-to-client.json"), ServerSideEvaluation.class);
+                resource("v4-evaluation-deferred-to-client.json"), ServerSideEvaluation.class);
 
         var rules = evaluation.getRules().orElseThrow();
 

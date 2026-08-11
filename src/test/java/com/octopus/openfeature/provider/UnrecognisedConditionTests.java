@@ -1,7 +1,6 @@
-package com.octopus.openfeature.provider.v4;
+package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.octopus.openfeature.provider.TestObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class UnrecognisedConditionTests {
 
-    private final ObjectMapper objectMapper = TestObjectMapper.INSTANCE;
+    private final ObjectMapper objectMapper = OctopusObjectMapper.INSTANCE;
 
     private ServerSideEvaluation flag(String singleQuotedJson) throws Exception {
         return objectMapper.readValue(Contexts.json(singleQuotedJson), ServerSideEvaluation.class);

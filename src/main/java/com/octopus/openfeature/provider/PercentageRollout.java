@@ -1,4 +1,4 @@
-package com.octopus.openfeature.provider.v4;
+package com.octopus.openfeature.provider;
 
 import org.apache.commons.codec.digest.MurmurHash3;
 
@@ -9,11 +9,8 @@ import java.nio.charset.StandardCharsets;
  * the targeting key keeps a bucket stable across evaluations, while giving each flag an independent
  * spread of targeting keys.
  *
- * <p>The v3 path has its own copy of this hash in {@code OctopusContext}, because Java package access
- * is not hierarchical and a package-private type here is invisible to that package. Keeping both
- * package-private is worth the duplication: the alternative is a public type that consumers could
- * bind to, and this one is due to disappear along with v3. Both copies are pinned to the same shared
- * vectors — see {@code RolloutVectors} in the tests — so the two cannot drift apart unnoticed.
+ * <p>Shared by every percentage rollout in the library, and matching the equivalent implementations in
+ * the other Octopus OpenFeature provider libraries — see {@code RolloutVectors} in the tests.
  */
 final class PercentageRollout {
 

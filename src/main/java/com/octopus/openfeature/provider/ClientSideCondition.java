@@ -1,4 +1,4 @@
-package com.octopus.openfeature.provider.v4;
+package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 

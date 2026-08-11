@@ -1,4 +1,4 @@
-package com.octopus.openfeature.provider.v4;
+package com.octopus.openfeature.provider;
 
 import dev.openfeature.sdk.ErrorCode;
 import dev.openfeature.sdk.exceptions.ParseError;

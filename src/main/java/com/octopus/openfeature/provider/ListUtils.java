@@ -1,4 +1,4 @@
-package com.octopus.openfeature.provider.v4;
+package com.octopus.openfeature.provider;
 
 import java.util.ArrayList;
 import java.util.Collections;

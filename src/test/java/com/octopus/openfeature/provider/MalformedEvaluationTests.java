@@ -1,8 +1,7 @@
-package com.octopus.openfeature.provider.v4;
+package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.octopus.openfeature.provider.TestObjectMapper;
 import dev.openfeature.sdk.ErrorCode;
 import dev.openfeature.sdk.EvaluationContext;
 import dev.openfeature.sdk.exceptions.ParseError;
@@ -27,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class MalformedEvaluationTests {
 
-    private final ObjectMapper objectMapper = TestObjectMapper.INSTANCE;
+    private final ObjectMapper objectMapper = OctopusObjectMapper.INSTANCE;
 
     /**
      * Satisfies every rule below, so a flag that failed to throw would visibly turn on.

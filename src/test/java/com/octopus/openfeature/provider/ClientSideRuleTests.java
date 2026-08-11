@@ -1,7 +1,6 @@
-package com.octopus.openfeature.provider.v4;
+package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.octopus.openfeature.provider.TestObjectMapper;
 import dev.openfeature.sdk.exceptions.ParseError;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ClientSideRuleTests {
 
-    private final ObjectMapper objectMapper = TestObjectMapper.INSTANCE;
+    private final ObjectMapper objectMapper = OctopusObjectMapper.INSTANCE;
 
     private static ClientSideRule rule(ClientSideCondition... conditions) {
         return new ClientSideRule("Rule 1", Arrays.asList(conditions));
