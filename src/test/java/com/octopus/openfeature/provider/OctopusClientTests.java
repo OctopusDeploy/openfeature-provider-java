@@ -121,6 +121,38 @@ class OctopusClientTests {
     }
 
     @Test
+    void getServerSideEvaluations_whenOneEvaluationCannotBeRead_stillReturnsTheOthers() throws Exception {
+        // A wrongly-typed field fails while the response is being read, so it cannot be reported per flag
+        // at evaluation time the way a missing field is. Reading the evaluations one at a time keeps it
+        // from costing every other flag in the response.
+        wireMock.stubFor(get(anyUrl()).willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withHeader("ContentHash", CONTENT_HASH)
+                .withBody("[{\"slug\":\"broken-feature\",\"evaluationKey\":\"k\",\"rules\":[{\"name\":\"r\",\"conditions\":[{\"type\":\"percentage-by-context\",\"percentage\":\"lots\"}]}]},"
+                        + "{\"slug\":\"well-formed-feature\",\"value\":true,\"reason\":\"The flag is enabled for this environment.\"}]")));
+
+        var response = clientForServer().getServerSideEvaluations();
+
+        assertThat(response).isNotNull();
+        assertThat(response.getEvaluations()).singleElement()
+                .satisfies(evaluation -> assertThat(evaluation.getSlug()).isEqualTo("well-formed-feature"));
+    }
+
+    @Test
+    void getServerSideEvaluations_whenTheBodyIsNotAListOfEvaluations_reportsAFailedFetch() throws Exception {
+        wireMock.stubFor(get(anyUrl()).willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withHeader("ContentHash", CONTENT_HASH)
+                .withBody("null")));
+
+        // Null rather than an empty response: the cache keeps refetching instead of settling on a
+        // content hash that the check endpoint will report as unchanged forever.
+        assertThat(clientForServer().getServerSideEvaluations()).isNull();
+    }
+
+    @Test
     void getServerSideEvaluations_requestsTheV4EvaluationsEndpoint() throws Exception {
         wireMock.stubFor(get(anyUrl()).willReturn(aResponse()
                 .withStatus(200)
