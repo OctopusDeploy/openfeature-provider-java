@@ -21,10 +21,10 @@ class OctopusContextProvider {
         }
 
         try {
-            var toggles = client.getFeatureToggleEvaluationManifest();
-            currentContext = toggles == null ? OctopusContext.empty() : new OctopusContext(toggles);
+            var evaluationResponse = client.getServerSideEvaluations();
+            currentContext = evaluationResponse == null ? OctopusContext.empty() : new OctopusContext(evaluationResponse);
         } catch (Exception e) {
-            logger.log(System.Logger.Level.ERROR, "Failed to retrieve feature manifest during initialization. Falling back to empty context, defaults will be used during evaluation.", e);
+            logger.log(System.Logger.Level.ERROR, "Failed to retrieve feature flag evaluations during initialization. Falling back to empty context, defaults will be used during evaluation.", e);
             currentContext = OctopusContext.empty();
         }
 
@@ -45,19 +45,19 @@ class OctopusContextProvider {
             try {
                 Thread.sleep(config.getCacheDuration().toMillis());
 
-                if (client.haveFeatureTogglesChanged(currentContext.getContentHash())) {
-                    var toggles = client.getFeatureToggleEvaluationManifest();
-                    if (toggles != null) {
-                        currentContext = new OctopusContext(toggles);
+                if (client.haveFeatureFlagsChanged(currentContext.getContentHash())) {
+                    var evaluationResponse = client.getServerSideEvaluations();
+                    if (evaluationResponse != null) {
+                        currentContext = new OctopusContext(evaluationResponse);
                     } else {
-                        logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature manifest. Retaining existing context which may be stale.");
+                        logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature flag evaluations. Retaining existing context which may be stale.");
                     }
                 }
             } catch (InterruptedException e) {
                 // the loop will be terminated and the thread will finish
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature manifest. Retaining existing context which may be stale.", e);
+                logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature flag evaluations. Retaining existing context which may be stale.", e);
             }
         }
     }

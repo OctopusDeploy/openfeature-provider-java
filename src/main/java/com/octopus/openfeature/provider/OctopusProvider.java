@@ -37,7 +37,7 @@ public class OctopusProvider extends EventProvider {
 
     @Override
     public ProviderEvaluation<Boolean> getBooleanEvaluation(String flagKey, Boolean defaultValue, EvaluationContext evaluationContext) {
-        return contextProvider.getOctopusContext().evaluate(flagKey, defaultValue, evaluationContext);
+        return contextProvider.getOctopusContext().evaluate(flagKey, evaluationContext);
     }
 
     @Override
@@ -61,9 +61,10 @@ public class OctopusProvider extends EventProvider {
     }
 
     private RuntimeException rejectNonBooleanEvaluation(String flagKey) {
-        var toggle = contextProvider.getOctopusContext().findFeatureToggleBySlug(flagKey);
-        if (toggle == null) {
-            return new FlagNotFoundError(flagKey);
+        var evaluation = contextProvider.getOctopusContext().findEvaluationBySlug(flagKey);
+        if (evaluation == null) {
+            return new FlagNotFoundError(
+                    "The slug provided did not match any of your Octopus Feature Flags. Please double check your slug and try again.");
         }
         return new TypeMismatchError("Octopus only supports boolean flags.");
     }

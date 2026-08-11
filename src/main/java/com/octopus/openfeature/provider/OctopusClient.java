@@ -43,7 +43,7 @@ class OctopusClient {
         this.config = config;
     }
 
-    Boolean haveFeatureTogglesChanged(byte[] contentHash) throws IOException, InterruptedException {
+    Boolean haveFeatureFlagsChanged(byte[] contentHash) throws IOException, InterruptedException {
         if (contentHash.length == 0) {
             return true;
         }
@@ -56,31 +56,31 @@ class OctopusClient {
                 .header("X-Octopus-Client", buildOctopusClientHeaderValue())
                 .build();
         HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
-        FeatureToggleCheckResponse checkResponse = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), FeatureToggleCheckResponse.class);
+        FeatureFlagCheckResponse checkResponse = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), FeatureFlagCheckResponse.class);
         return !Arrays.equals(checkResponse.contentHash, contentHash);
     }
 
-    FeatureToggles getFeatureToggleEvaluationManifest() throws IOException, InterruptedException {
-        URI manifestURI = getManifestURI();
+    EvaluationResponse getServerSideEvaluations() throws IOException, InterruptedException {
+        URI evaluationsURI = getEvaluationsURI();
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
-                .uri(manifestURI)
+                .uri(evaluationsURI)
                 .header("Authorization", String.format("Bearer %s", config.getClientIdentifier()))
                 .header("X-Octopus-Client", buildOctopusClientHeaderValue())
                 .build();
         HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (httpResponse.statusCode() == StatusCodeNotFound) {
-            logger.log(System.Logger.Level.WARNING, String.format("Failed to retrieve feature toggles for client identifier %s from %s", config.getClientIdentifier(), manifestURI.toString()));
+            logger.log(System.Logger.Level.WARNING, String.format("Failed to retrieve feature flags for client identifier %s from %s", config.getClientIdentifier(), evaluationsURI.toString()));
             return null;
         }
         Optional<String> contentHashHeader = httpResponse.headers().firstValue("ContentHash");
         if (contentHashHeader.isEmpty()) {
-            logger.log(System.Logger.Level.WARNING, String.format("Feature toggle response from %s did not contain expected ContentHash header", manifestURI.toString()));
+            logger.log(System.Logger.Level.WARNING, String.format("Feature flag response from %s did not contain expected ContentHash header", evaluationsURI.toString()));
             return null;
         }
-        var evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<FeatureToggleEvaluation>>() {});
-        return new FeatureToggles(evaluations, Base64.getDecoder().decode(contentHashHeader.get()));
+        var evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<ServerSideEvaluation>>() {});
+        return new EvaluationResponse(evaluations, Base64.getDecoder().decode(contentHashHeader.get()));
     }
 
     String buildOctopusClientHeaderValue() {
@@ -95,16 +95,16 @@ class OctopusClient {
 
     private URI getCheckURI() {
         try {
-            return new URL(config.getServerUri().toURL(), "/api/featuretoggles/check/v3/").toURI();
+            return new URL(config.getServerUri().toURL(), "/api/feature-flags/check/v4/").toURI();
         } catch (MalformedURLException | URISyntaxException ignored) // we know this URL is well-formed
         {
         }
         return null;
     }
 
-    private URI getManifestURI() {
+    private URI getEvaluationsURI() {
         try {
-            return new URL(config.getServerUri().toURL(), "/api/toggles/evaluations/v3/").toURI();
+            return new URL(config.getServerUri().toURL(), "/api/feature-flags/evaluations/v4/").toURI();
         } catch (MalformedURLException | URISyntaxException ignored) // we know this URL is well-formed
         {
         }
@@ -112,7 +112,7 @@ class OctopusClient {
     }
 
     // This class needs to be static to allow deserialization
-    private static class FeatureToggleCheckResponse {
+    private static class FeatureFlagCheckResponse {
         public byte[] contentHash;
     }
 }

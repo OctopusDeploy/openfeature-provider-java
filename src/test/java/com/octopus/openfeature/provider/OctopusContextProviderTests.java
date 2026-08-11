@@ -15,26 +15,34 @@ class OctopusContextProviderTests {
 
     static class MockOctopusFeatureClient extends OctopusClient {
 
-        private volatile FeatureToggles toggles;
+        private volatile EvaluationResponse evaluationResponse;
 
-        MockOctopusFeatureClient(FeatureToggles toggles) {
+        MockOctopusFeatureClient(EvaluationResponse evaluationResponse) {
             super(null);
-            this.toggles = toggles;
+            this.evaluationResponse = evaluationResponse;
         }
 
-        void changeToggles(FeatureToggles toggles) {
-            this.toggles = toggles;
+        void changeEvaluations(EvaluationResponse evaluationResponse) {
+            this.evaluationResponse = evaluationResponse;
         }
 
         @Override
-        Boolean haveFeatureTogglesChanged(byte[] contentHash) {
+        Boolean haveFeatureFlagsChanged(byte[] contentHash) {
             return true;
         }
 
         @Override
-        FeatureToggles getFeatureToggleEvaluationManifest() {
-            return toggles;
+        EvaluationResponse getServerSideEvaluations() {
+            return evaluationResponse;
         }
+    }
+
+    private static EvaluationResponse response(boolean value, byte[] contentHash) {
+        return new EvaluationResponse(
+                List.of(new ServerSideEvaluation("test-feature", value,
+                        value ? "The flag is enabled for this environment." : "The flag is disabled for this environment.",
+                        null, null)),
+                contentHash);
     }
 
     private final OctopusConfiguration configuration = configure();
@@ -51,10 +59,7 @@ class OctopusContextProviderTests {
         byte[] initialHash = {0x01, 0x02, 0x03, 0x04};
         byte[] updatedHash = {0x01, 0x02, 0x03, 0x05};
 
-        var client = new MockOctopusFeatureClient(new FeatureToggles(
-            List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 100)),
-            initialHash
-        ));
+        var client = new MockOctopusFeatureClient(response(true, initialHash));
 
         var provider = new OctopusContextProvider(configuration, client);
         provider.initialize();
@@ -62,20 +67,17 @@ class OctopusContextProviderTests {
         try {
             // Validate the initial state
             assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(initialHash);
-            assertThat(provider.getOctopusContext().evaluate("test-feature", false, null).getValue()).isTrue();
+            assertThat(provider.getOctopusContext().evaluate("test-feature", null).getValue()).isTrue();
 
             // Simulate a change in the available feature toggles
-            client.changeToggles(new FeatureToggles(
-                List.of(new FeatureToggleEvaluation("test-feature", false, "evaluation-key", Collections.emptyList(), 100)),
-                updatedHash
-            ));
+            client.changeEvaluations(response(false, updatedHash));
 
             // Wait for the cache to expire
             Thread.sleep(500);
 
             // Validate the updated toggles are available
             assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(updatedHash);
-            assertThat(provider.getOctopusContext().evaluate("test-feature", true, null).getValue()).isFalse();
+            assertThat(provider.getOctopusContext().evaluate("test-feature", null).getValue()).isFalse();
 
         } finally {
             provider.shutdown();
@@ -87,10 +89,7 @@ class OctopusContextProviderTests {
 
         byte[] contentHash = {0x01, 0x02, 0x03, 0x04};
 
-        var client = new MockOctopusFeatureClient(new FeatureToggles(
-            List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 100)),
-            contentHash
-        ));
+        var client = new MockOctopusFeatureClient(response(true, contentHash));
 
         var logMessages = new ArrayList<String>();
         var julLogger = Logger.getLogger(OctopusClient.class.getName());
@@ -110,15 +109,15 @@ class OctopusContextProviderTests {
             julLogger.setUseParentHandlers(false);
 
             // Simulate a failed fetch
-            client.changeToggles(null);
+            client.changeEvaluations(null);
 
             // Wait for the cache to expire
             Thread.sleep(500);
 
             // Validate that the existing context is retained and an error was logged
             assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(contentHash);
-            assertThat(provider.getOctopusContext().evaluate("test-feature", false, null).getValue()).isTrue();
-            assertThat(logMessages).anyMatch(m -> m.startsWith("Failed to retrieve updated feature manifest"));
+            assertThat(provider.getOctopusContext().evaluate("test-feature", null).getValue()).isTrue();
+            assertThat(logMessages).anyMatch(m -> m.startsWith("Failed to retrieve updated feature flag evaluations"));
 
         } finally {
             julLogger.removeHandler(handler);
@@ -145,10 +144,7 @@ class OctopusContextProviderTests {
             assertThat(provider.getOctopusContext().getContentHash()).isEmpty();
 
             // Update client to return valid toggles and wait for refresh
-            client.changeToggles(new FeatureToggles(
-                List.of(new FeatureToggleEvaluation("test-feature", false, "evaluation-key", Collections.emptyList(), 100)),
-                contentHash
-            ));
+            client.changeEvaluations(response(false, contentHash));
             Thread.sleep(5000);
 
             // Assert that the context is now correctly populated
@@ -176,10 +172,7 @@ class OctopusContextProviderTests {
         julLogger.addHandler(handler);
 
         // initialize with a client that returns valid toggles
-        var client = new MockOctopusFeatureClient(new FeatureToggles(
-            List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 100)),
-            initialHash
-        ));
+        var client = new MockOctopusFeatureClient(response(true, initialHash));
         var provider = new OctopusContextProvider(configuration, client);
         provider.initialize();
 
@@ -188,18 +181,15 @@ class OctopusContextProviderTests {
 
         try {
             // Switch to a null client and wait for refresh to fail
-            client.changeToggles(null);
+            client.changeEvaluations(null);
             Thread.sleep(5000);
 
             // Assert that failed refresh is logged and old context is retained
-            assertThat(logMessages).anyMatch(m -> m.startsWith("Failed to retrieve updated feature manifest"));
+            assertThat(logMessages).anyMatch(m -> m.startsWith("Failed to retrieve updated feature flag evaluations"));
             assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(initialHash);
 
             // Update client to return valid toggles again and wait for refresh
-            client.changeToggles(new FeatureToggles(
-                List.of(new FeatureToggleEvaluation("test-feature", false, "evaluation-key", Collections.emptyList(), 100)),
-                updatedHash
-            ));
+            client.changeEvaluations(response(false, updatedHash));
             Thread.sleep(5000);
 
             assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(updatedHash);
@@ -214,20 +204,20 @@ class OctopusContextProviderTests {
     static class ThrowsOnRefreshClient extends OctopusClient {
 
         static final String ERROR_MESSAGE = "Oops! Simulated refresh error";
-        private final FeatureToggles initial;
+        private final EvaluationResponse initial;
 
-        ThrowsOnRefreshClient(FeatureToggles initial) {
+        ThrowsOnRefreshClient(EvaluationResponse initial) {
             super(null);
             this.initial = initial;
         }
 
         @Override
-        Boolean haveFeatureTogglesChanged(byte[] contentHash) {
+        Boolean haveFeatureFlagsChanged(byte[] contentHash) {
             throw new RuntimeException(ERROR_MESSAGE);
         }
 
         @Override
-        FeatureToggles getFeatureToggleEvaluationManifest() {
+        EvaluationResponse getServerSideEvaluations() {
             return initial;
         }
     }
@@ -249,10 +239,7 @@ class OctopusContextProviderTests {
         julLogger.setUseParentHandlers(false);
 
         // Initialize with a client that will throw on refresh
-        var client = new ThrowsOnRefreshClient(new FeatureToggles(
-            List.of(new FeatureToggleEvaluation("test-feature", true, "evaluation-key", Collections.emptyList(), 100)),
-            contentHash
-        ));
+        var client = new ThrowsOnRefreshClient(response(true, contentHash));
         var provider = new OctopusContextProvider(configuration, client);
         provider.initialize();
 
@@ -261,7 +248,7 @@ class OctopusContextProviderTests {
             Thread.sleep(500);
 
             assertThat(logRecords).anyMatch(r ->
-                r.getMessage().startsWith("Failed to retrieve updated feature manifest")
+                r.getMessage().startsWith("Failed to retrieve updated feature flag evaluations")
                 && r.getThrown() != null
                 && r.getThrown().getMessage().contains(ThrowsOnRefreshClient.ERROR_MESSAGE)
             );

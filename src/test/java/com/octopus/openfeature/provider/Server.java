@@ -37,12 +37,12 @@ class Server {
     /**
      * Registers the given JSON as the response body for a new unique client token.
      *
-     * @param responseJson the JSON array that the toggle API would return
+     * @param responseJson the JSON array that the evaluations endpoint would return
      * @return the client identifier (Bearer token) to use in OctopusConfiguration
      */
     String configure(String responseJson) {
         String token = UUID.randomUUID().toString();
-        wireMock.stubFor(get(urlPathEqualTo("/api/toggles/evaluations/v3/"))
+        wireMock.stubFor(get(urlPathEqualTo("/api/feature-flags/evaluations/v4/"))
             .withHeader("Authorization", equalTo("Bearer " + token))
             .willReturn(aResponse()
                 .withStatus(200)
