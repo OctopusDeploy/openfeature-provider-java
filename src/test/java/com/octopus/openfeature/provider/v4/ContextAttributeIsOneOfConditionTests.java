@@ -66,29 +66,20 @@ class ContextAttributeIsOneOfConditionTests {
 
     // A condition with nothing to match on has no defensible answer, so it fails the evaluation.
     @ParameterizedTest(name = "[{index}] {2}")
-    @MethodSource("missingKeyOrValues")
-    void aMissingKeyOrValuesThrowsAParseError(String key, List<String> values, String expectedProblem) {
+    @MethodSource("nothingToMatchOn")
+    void aConditionWithNothingToMatchOnThrowsAParseError(String key, List<String> values, String expectedProblem) {
         assertThatThrownBy(() -> new ContextAttributeIsOneOfCondition(key, values)
                 .matches(Contexts.forRules(null, "plan", "pro")))
                 .isInstanceOf(ParseError.class)
                 .hasMessage(expectedProblem);
     }
 
-    static Stream<Arguments> missingKeyOrValues() {
+    static Stream<Arguments> nothingToMatchOn() {
         return Stream.of(
                 Arguments.of(null, List.of("pro"), "A condition is missing a key."),
                 Arguments.of("plan", null, "A condition is missing values."),
-                Arguments.of("plan", List.of(), "A condition is missing values.")
+                Arguments.of("plan", List.of(), "A condition is missing values."),
+                Arguments.of("plan", Arrays.asList("pro", null), "A condition is missing a value.")
         );
-    }
-
-    @Test
-    void aMissingValueInTheListThrowsAParseError() {
-        var values = Arrays.asList("pro", null);
-
-        assertThatThrownBy(() -> new ContextAttributeIsOneOfCondition("plan", values)
-                .matches(Contexts.forRules(null, "plan", "pro")))
-                .isInstanceOf(ParseError.class)
-                .hasMessage("A condition is missing a value.");
     }
 }

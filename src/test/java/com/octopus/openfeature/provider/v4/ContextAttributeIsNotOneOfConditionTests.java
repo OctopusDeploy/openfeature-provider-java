@@ -49,29 +49,20 @@ class ContextAttributeIsNotOneOfConditionTests {
     }
 
     @ParameterizedTest(name = "[{index}] {2}")
-    @MethodSource("missingKeyOrValues")
-    void aMissingKeyOrValuesThrowsAParseError(String key, List<String> values, String expectedProblem) {
+    @MethodSource("nothingToMatchOn")
+    void aConditionWithNothingToMatchOnThrowsAParseError(String key, List<String> values, String expectedProblem) {
         assertThatThrownBy(() -> new ContextAttributeIsNotOneOfCondition(key, values)
                 .matches(Contexts.forRules(null, "region", "us")))
                 .isInstanceOf(ParseError.class)
                 .hasMessage(expectedProblem);
     }
 
-    static Stream<Arguments> missingKeyOrValues() {
+    static Stream<Arguments> nothingToMatchOn() {
         return Stream.of(
                 Arguments.of(null, List.of("eu"), "A condition is missing a key."),
                 Arguments.of("region", null, "A condition is missing values."),
-                Arguments.of("region", List.of(), "A condition is missing values.")
+                Arguments.of("region", List.of(), "A condition is missing values."),
+                Arguments.of("region", Arrays.asList("eu", null), "A condition is missing a value.")
         );
-    }
-
-    @Test
-    void aMissingValueInTheListThrowsAParseError() {
-        var values = Arrays.asList("eu", null);
-
-        assertThatThrownBy(() -> new ContextAttributeIsNotOneOfCondition("region", values)
-                .matches(Contexts.forRules(null, "region", "us")))
-                .isInstanceOf(ParseError.class)
-                .hasMessage("A condition is missing a value.");
     }
 }
