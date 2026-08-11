@@ -3,6 +3,7 @@ package com.octopus.openfeature.provider;
 import dev.openfeature.sdk.EvaluationContext;
 import dev.openfeature.sdk.ProviderEvaluation;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
+import dev.openfeature.sdk.exceptions.ParseError;
 
 import java.util.List;
 import java.util.Objects;
@@ -62,6 +63,15 @@ class OctopusContext {
                     "The slug provided did not match any of your Octopus Feature Flags. Please double check your slug and try again.");
         }
 
-        return serverSideEvaluation.evaluate(evaluationContext);
+        try {
+            return serverSideEvaluation.evaluate(evaluationContext);
+        } catch (ParseError e) {
+            // The message is shared verbatim with the other provider libraries, so it names the problem
+            // but not the flag. Logging the slug beside it is what makes a malformed response traceable
+            // when a rollout affects several flags at once.
+            logger.log(System.Logger.Level.WARNING, String.format(
+                    "Could not evaluate feature flag %s: %s", slug, e.getMessage()));
+            throw e;
+        }
     }
 }
