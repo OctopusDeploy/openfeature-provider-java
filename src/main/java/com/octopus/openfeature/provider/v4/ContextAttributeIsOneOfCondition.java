@@ -24,7 +24,7 @@ final class ContextAttributeIsOneOfCondition extends ClientSideCondition {
             @JsonProperty("values") List<String> values
     ) {
         this.key = key;
-        this.values = WireLists.copyOrNull(values);
+        this.values = ListUtils.copyOrNull(values);
     }
 
     public String getKey() {

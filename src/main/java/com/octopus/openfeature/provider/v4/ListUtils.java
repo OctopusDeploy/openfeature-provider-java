@@ -7,9 +7,9 @@ import java.util.List;
 /**
  * List handling for deserialized payloads.
  */
-final class WireLists {
+final class ListUtils {
 
-    private WireLists() {
+    private ListUtils() {
     }
 
     /**

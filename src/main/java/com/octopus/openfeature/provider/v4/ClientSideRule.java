@@ -20,7 +20,7 @@ final class ClientSideRule {
             @JsonProperty("conditions") List<ClientSideCondition> conditions
     ) {
         this.name = name;
-        this.conditions = WireLists.copyOrNull(conditions);
+        this.conditions = ListUtils.copyOrNull(conditions);
     }
 
     public String getName() {

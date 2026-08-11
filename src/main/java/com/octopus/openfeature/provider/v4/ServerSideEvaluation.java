@@ -33,7 +33,7 @@ final class ServerSideEvaluation {
         this.value = value;
         this.reason = reason;
         this.evaluationKey = evaluationKey;
-        this.rules = WireLists.copyOrNull(rules);
+        this.rules = ListUtils.copyOrNull(rules);
     }
 
     public String getSlug() {
