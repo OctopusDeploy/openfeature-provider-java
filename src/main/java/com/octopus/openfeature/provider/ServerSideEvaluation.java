@@ -21,11 +21,6 @@ final class ServerSideEvaluation {
     private final String evaluationKey;
     private final List<ClientSideRule> rules;
 
-    /**
-     * Why this flag's entry could not be read, or null if it was read normally.
-     */
-    private final String unreadableBecause;
-
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     ServerSideEvaluation(
             @JsonProperty("slug") String slug,
@@ -39,27 +34,6 @@ final class ServerSideEvaluation {
         this.reason = reason;
         this.evaluationKey = evaluationKey;
         this.rules = ListUtils.copyOrNull(rules);
-        this.unreadableBecause = null;
-    }
-
-    private ServerSideEvaluation(String slug, String unreadableBecause) {
-        this.slug = slug;
-        this.value = null;
-        this.reason = null;
-        this.evaluationKey = null;
-        this.rules = null;
-        this.unreadableBecause = unreadableBecause;
-    }
-
-    /**
-     * A flag whose entry could not be read at all — a field of the wrong type, say, which fails while
-     * the response is being parsed rather than when the flag is evaluated.
-     *
-     * <p>Kept in the response rather than dropped so that the flag reports a parse error of its own,
-     * as every other malformed shape does, instead of looking like a flag the server never sent.
-     */
-    static ServerSideEvaluation unreadable(String slug, String problem) {
-        return new ServerSideEvaluation(slug, problem);
     }
 
     public String getSlug() {
@@ -90,10 +64,6 @@ final class ServerSideEvaluation {
      * the caller's default value.
      */
     ProviderEvaluation<Boolean> evaluate(EvaluationContext context) {
-        if (unreadableBecause != null) {
-            throw new ParseError(unreadableBecause);
-        }
-
         if (value != null) {
             if (reason == null) {
                 throw new ParseError("The flag has a value but has no reason.");
