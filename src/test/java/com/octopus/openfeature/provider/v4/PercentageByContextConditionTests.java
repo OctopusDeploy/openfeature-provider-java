@@ -28,7 +28,7 @@ class PercentageByContextConditionTests {
     @Test
     void withoutATargetingKeyOnlyAFullRolloutMatches() {
         assertThat(new PercentageByContextCondition(100).matches(Contexts.forRules(null)))
-                .as("a 100%% rollout matches even without a targeting key").isTrue();
+                .as("a 100% rollout matches even without a targeting key").isTrue();
         assertThat(new PercentageByContextCondition(99).matches(Contexts.forRules(null)))
                 .as("a partial rollout cannot bucket without a targeting key").isFalse();
         assertThat(new PercentageByContextCondition(50).matches(Contexts.forRules("")))

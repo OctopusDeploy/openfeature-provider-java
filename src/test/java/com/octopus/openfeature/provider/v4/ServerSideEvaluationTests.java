@@ -98,6 +98,6 @@ class ServerSideEvaluationTests {
                 .as("there is no attribute to match").isFalse();
         assertThat(deferred(new ClientSideRule("everyone", List.of(new PercentageByContextCondition(100))))
                 .evaluate(null).getValue())
-                .as("a 100%% rollout matches without a targeting key").isTrue();
+                .as("a 100% rollout matches without a targeting key").isTrue();
     }
 }
