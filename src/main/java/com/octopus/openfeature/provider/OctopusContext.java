@@ -5,6 +5,7 @@ import dev.openfeature.sdk.ProviderEvaluation;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,7 +33,15 @@ class OctopusContext {
     }
 
     ServerSideEvaluation findEvaluationBySlug(String slug) {
-        return evaluationResponse.getEvaluations().stream()
+        var evaluations = evaluationResponse.getEvaluations();
+        if (evaluations == null) {
+            return null;
+        }
+
+        // A null entry carries no slug, so it can never be the flag being asked for. Skipping it keeps a
+        // malformed entry from costing every other flag in the response.
+        return evaluations.stream()
+                .filter(Objects::nonNull)
                 .filter(evaluation -> slug.equalsIgnoreCase(evaluation.getSlug()))
                 .findFirst().orElse(null);
     }

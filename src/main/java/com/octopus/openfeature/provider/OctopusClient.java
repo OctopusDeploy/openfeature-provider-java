@@ -80,6 +80,13 @@ class OctopusClient {
             return null;
         }
         var evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<ServerSideEvaluation>>() {});
+        if (evaluations == null) {
+            // Returning null leaves the cache on its previous context, or on the empty one, both of
+            // which keep refetching. Storing a response with a usable content hash would not: the check
+            // endpoint would report no change and the provider would never recover.
+            logger.log(System.Logger.Level.WARNING, String.format("Feature flag response content from %s was empty", evaluationsURI.toString()));
+            return null;
+        }
         return new EvaluationResponse(evaluations, Base64.getDecoder().decode(contentHashHeader.get()));
     }
 

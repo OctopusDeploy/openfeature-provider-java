@@ -1,5 +1,6 @@
 package com.octopus.openfeature.provider;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import dev.openfeature.sdk.ErrorCode;
 import dev.openfeature.sdk.MutableContext;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
@@ -96,6 +97,30 @@ class OctopusContextTests {
         assertThat(new OctopusContext(new EvaluationResponse(List.of(), contentHash)).getContentHash())
                 .isEqualTo(contentHash);
         assertThat(OctopusContext.empty().getContentHash()).isEmpty();
+    }
+
+    @Test
+    void aNullEntryInTheResponseDoesNotCostTheOtherFlags() throws Exception {
+        // A malformed entry only fails its own flag, so a null alongside a well-formed flag must not take
+        // the lookup down with it.
+        List<ServerSideEvaluation> evaluations = OctopusObjectMapper.INSTANCE.readValue(
+                Contexts.json("[ null, { 'slug': 'feature-a', 'value': true, 'reason': 'Enabled.' } ]"),
+                new TypeReference<List<ServerSideEvaluation>>() {});
+        var context = new OctopusContext(new EvaluationResponse(evaluations, new byte[0]));
+
+        assertThat(context.evaluate("feature-a", null).getValue()).isTrue();
+        assertThatThrownBy(() -> context.evaluate("no-such-flag", null))
+                .as("the null entry is skipped rather than matched").isInstanceOf(FlagNotFoundError.class);
+    }
+
+    @Test
+    void aResponseWithNoEvaluationsResolvesNothingRatherThanFailing() {
+        // Defence in depth: the client turns a null body into a failed fetch, so this shape should not
+        // reach the evaluator — but if it does, every flag is not-found rather than an NPE.
+        var context = new OctopusContext(new EvaluationResponse(null, new byte[0]));
+
+        assertThatThrownBy(() -> context.evaluate("feature-a", null)).isInstanceOf(FlagNotFoundError.class);
+        assertThat(context.findEvaluationBySlug("feature-a")).isNull();
     }
 
     @Test
