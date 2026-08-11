@@ -1,15 +1,10 @@
 package com.octopus.openfeature.provider.v4;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * Base type for a client-side rule condition, selected from the camelCase {@code type} discriminator
- * when deserializing a v4 evaluation response. These types model the wire shape only.
- *
- * <p>A discriminator this version of the provider does not recognise — or an absent one —
- * deserializes to {@link UnknownCondition} rather than failing, so a condition type
- * introduced by a newer server degrades safely on an older client.
+ * when deserializing a v4 evaluation response.
  *
  * <p>The conditions sit alongside the rest of the v4 types rather than in a {@code conditions}
  * sub-package as the .NET provider has them. Java package access is not hierarchical, so a
@@ -17,17 +12,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * following that layout would mean making every condition public — part of the library's supported
  * API, which is what keeping these types package-private is meant to avoid.
  */
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type",
-        visible = true,
-        defaultImpl = UnknownCondition.class
-)
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = PercentageByContextCondition.class, name = ConditionTypeNames.PERCENTAGE_BY_CONTEXT),
-        @JsonSubTypes.Type(value = ContextAttributeIsOneOfCondition.class, name = ConditionTypeNames.CONTEXT_ATTRIBUTE_IS_ONE_OF),
-        @JsonSubTypes.Type(value = ContextAttributeIsNotOneOfCondition.class, name = ConditionTypeNames.CONTEXT_ATTRIBUTE_IS_NOT_ONE_OF)
-})
+@JsonDeserialize(using = ClientSideConditionDeserializer.class)
 abstract class ClientSideCondition {
+
+    /**
+     * Whether this condition is met. A condition that did not arrive in a shape its type can evaluate
+     * throws {@link dev.openfeature.sdk.exceptions.ParseError} rather than reading a value it was not
+     * sent.
+     */
+    abstract boolean matches(ClientSideEvaluationContext context);
 }

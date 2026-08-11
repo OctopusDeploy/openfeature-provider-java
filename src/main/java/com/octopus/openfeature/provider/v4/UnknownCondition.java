@@ -2,18 +2,20 @@ package com.octopus.openfeature.provider.v4;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import dev.openfeature.sdk.exceptions.ParseError;
 
 import java.util.Optional;
 
 /**
- * A client-side condition whose {@code type} discriminator this version of the provider does not
- * recognise, or which carried no discriminator at all. Rather than failing the whole evaluation
- * response, an unrecognised condition is preserved as this type. It always evaluates to
- * {@code false}, so a rule containing an unknown condition can never match — a newer server
- * capability is safely treated as "not met" by an older client.
+ * A condition whose {@code type} this version of the provider does not recognise. It never matches,
+ * so a newer server's capability is treated as "not met" by an older client rather than failing the
+ * flag.
  *
  * <p>The raw payload of an unknown condition is not retained, only its discriminator.
  */
+@JsonDeserialize(using = JsonDeserializer.None.class) // Resets the base type's deserializer; see ClientSideConditionDeserializer.
 final class UnknownCondition extends ClientSideCondition {
     private final String type;
 
@@ -25,9 +27,20 @@ final class UnknownCondition extends ClientSideCondition {
     }
 
     /**
-     * The unrecognised discriminator value, or empty if none was present.
+     * The unrecognised discriminator value, or empty if none was present or it was not a string.
      */
     public Optional<String> getType() {
         return Optional.ofNullable(type);
+    }
+
+    @Override
+    boolean matches(ClientSideEvaluationContext context) {
+        // No server version emits a condition without a type, so unlike an unrecognised type this is a
+        // response that could not have been sent.
+        if (type == null) {
+            throw new ParseError("A condition is missing a type.");
+        }
+
+        return false;
     }
 }

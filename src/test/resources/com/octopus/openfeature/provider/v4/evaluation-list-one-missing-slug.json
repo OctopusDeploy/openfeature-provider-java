@@ -1,0 +1,11 @@
+[
+  {
+    "value": true,
+    "reason": "The flag is enabled for this environment."
+  },
+  {
+    "slug": "well-formed-feature",
+    "value": true,
+    "reason": "The flag is enabled for this environment."
+  }
+]

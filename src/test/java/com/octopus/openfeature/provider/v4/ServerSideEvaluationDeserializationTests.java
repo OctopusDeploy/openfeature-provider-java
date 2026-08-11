@@ -2,7 +2,6 @@ package com.octopus.openfeature.provider.v4;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.octopus.openfeature.provider.TestObjectMapper;
 import org.junit.jupiter.api.Test;
 
@@ -13,10 +12,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Exercises polymorphic JSON deserialization of the v4 evaluation response. Everything is
- * deserialized with the provider's own {@code OctopusObjectMapper} — the same mapper the client
- * uses in production — so discriminator matching, property binding and the absent-property
- * behaviour are all covered end to end.
+ * Deserialization of a v4 evaluation response: both flag shapes and the array the endpoint returns.
+ * Uses the provider's own {@code OctopusObjectMapper}, as the client does in production; individual
+ * conditions are covered by {@link ClientSideConditionDeserializationTests}.
  */
 class ServerSideEvaluationDeserializationTests {
 
@@ -24,87 +22,6 @@ class ServerSideEvaluationDeserializationTests {
 
     private InputStream resource(String name) {
         return getClass().getResourceAsStream(name);
-    }
-
-    @Test
-    void shouldDeserializePercentageByContextConditionToConcreteType() throws Exception {
-        var condition = objectMapper.readValue(
-                resource("condition-percentage-by-context.json"), ClientSideCondition.class);
-
-        assertThat(condition)
-                .isInstanceOfSatisfying(PercentageByContextCondition.class,
-                        percentage -> assertThat(percentage.getPercentage()).isEqualTo(50));
-    }
-
-    @Test
-    void shouldDeserializeContextAttributeIsOneOfConditionToConcreteType() throws Exception {
-        var condition = objectMapper.readValue(
-                resource("condition-context-attribute-is-one-of.json"), ClientSideCondition.class);
-
-        assertThat(condition)
-                .isInstanceOfSatisfying(ContextAttributeIsOneOfCondition.class, isOneOf -> {
-                    assertThat(isOneOf.getKey()).isEqualTo("user-id");
-                    assertThat(isOneOf.getValues()).containsExactly("1234", "5678");
-                });
-    }
-
-    @Test
-    void shouldDeserializeContextAttributeIsNotOneOfConditionToConcreteType() throws Exception {
-        var condition = objectMapper.readValue(
-                resource("condition-context-attribute-is-not-one-of.json"), ClientSideCondition.class);
-
-        assertThat(condition)
-                .isInstanceOfSatisfying(ContextAttributeIsNotOneOfCondition.class, isNotOneOf -> {
-                    assertThat(isNotOneOf.getKey()).isEqualTo("region");
-                    assertThat(isNotOneOf.getValues()).containsExactly("us", "eu");
-                });
-    }
-
-    @Test
-    void shouldDeserializeMixedConditionListToConcreteTypes() throws Exception {
-        var conditions = objectMapper.readValue(
-                resource("condition-list-mixed.json"),
-                new TypeReference<List<ClientSideCondition>>() {}
-        );
-
-        assertThat(conditions).hasExactlyElementsOfTypes(
-                PercentageByContextCondition.class,
-                ContextAttributeIsOneOfCondition.class,
-                ContextAttributeIsNotOneOfCondition.class
-        );
-    }
-
-    @Test
-    void shouldDeserializeUnknownConditionTypeToUnknownConditionInsteadOfThrowing() throws Exception {
-        var condition = objectMapper.readValue(
-                resource("condition-unknown-type.json"), ClientSideCondition.class);
-
-        assertThat(condition)
-                .isInstanceOfSatisfying(UnknownCondition.class,
-                        unknown -> assertThat(unknown.getType()).hasValue("not-a-real-condition"));
-    }
-
-    @Test
-    void shouldDeserializeConditionWithoutTypeDiscriminatorToUnknownCondition() throws Exception {
-        var condition = objectMapper.readValue(
-                resource("condition-missing-type.json"), ClientSideCondition.class);
-
-        assertThat(condition)
-                .isInstanceOfSatisfying(UnknownCondition.class,
-                        unknown -> assertThat(unknown.getType()).isEmpty());
-    }
-
-    @Test
-    void shouldPreserveUnknownConditionAlongsideKnownConditionsWithoutFailingTheResponse() throws Exception {
-        var evaluation = objectMapper.readValue(
-                resource("evaluation-with-unknown-condition.json"), ServerSideEvaluation.class);
-
-        var conditions = evaluation.getRules().orElseThrow().get(0).getConditions();
-
-        assertThat(conditions.get(0)).isInstanceOf(PercentageByContextCondition.class);
-        assertThat(conditions.get(1))
-                .isInstanceOfSatisfying(UnknownCondition.class,
-                        unknown -> assertThat(unknown.getType()).hasValue("some-future-condition"));
     }
 
     @Test
@@ -138,12 +55,25 @@ class ServerSideEvaluationDeserializationTests {
 
         assertThat(rule.getConditions().get(0))
                 .isInstanceOfSatisfying(PercentageByContextCondition.class,
-                        percentage -> assertThat(percentage.getPercentage()).isEqualTo(50));
+                        percentage -> assertThat(percentage.getPercentage()).hasValue(50));
         assertThat(rule.getConditions().get(1))
                 .isInstanceOfSatisfying(ContextAttributeIsOneOfCondition.class, isOneOf -> {
                     assertThat(isOneOf.getKey()).isEqualTo("user-id");
                     assertThat(isOneOf.getValues()).containsExactly("1234", "5678");
                 });
+    }
+
+    @Test
+    void shouldPreserveUnknownConditionAlongsideKnownConditionsWithoutFailingTheResponse() throws Exception {
+        var evaluation = objectMapper.readValue(
+                resource("evaluation-with-unknown-condition.json"), ServerSideEvaluation.class);
+
+        var conditions = evaluation.getRules().orElseThrow().get(0).getConditions();
+
+        assertThat(conditions.get(0)).isInstanceOf(PercentageByContextCondition.class);
+        assertThat(conditions.get(1))
+                .isInstanceOfSatisfying(UnknownCondition.class,
+                        unknown -> assertThat(unknown.getType()).hasValue("some-future-condition"));
     }
 
     @Test
@@ -168,10 +98,26 @@ class ServerSideEvaluationDeserializationTests {
     }
 
     @Test
-    void shouldFailDeserializationWhenSlugIsMissing() {
-        assertThatThrownBy(() -> objectMapper.readValue(
-                resource("evaluation-missing-slug.json"), ServerSideEvaluation.class))
-                .isInstanceOf(MismatchedInputException.class);
+    void shouldDeserializeEvaluationWithoutASlugRatherThanFailingTheResponse() throws Exception {
+        // No property is required at parse time: a malformed flag is reported when it is evaluated, so
+        // it costs only itself rather than every other flag in the response.
+        var evaluation = objectMapper.readValue(
+                resource("evaluation-missing-slug.json"), ServerSideEvaluation.class);
+
+        assertThat(evaluation.getSlug()).isNull();
+        assertThat(evaluation.getValue()).hasValue(true);
+    }
+
+    @Test
+    void shouldDeserializeEveryFlagWhenOneOfThemIsMissingItsSlug() throws Exception {
+        var evaluations = objectMapper.readValue(
+                resource("evaluation-list-one-missing-slug.json"),
+                new TypeReference<List<ServerSideEvaluation>>() {}
+        );
+
+        assertThat(evaluations).hasSize(2);
+        assertThat(evaluations.get(0).getSlug()).isNull();
+        assertThat(evaluations.get(1).getSlug()).isEqualTo("well-formed-feature");
     }
 
     @Test
@@ -184,7 +130,7 @@ class ServerSideEvaluationDeserializationTests {
         var conditions = evaluation.getRules().orElseThrow().get(0).getConditions();
         assertThat(conditions.get(0))
                 .isInstanceOfSatisfying(PercentageByContextCondition.class,
-                        percentage -> assertThat(percentage.getPercentage()).isEqualTo(50));
+                        percentage -> assertThat(percentage.getPercentage()).hasValue(50));
     }
 
     @Test
