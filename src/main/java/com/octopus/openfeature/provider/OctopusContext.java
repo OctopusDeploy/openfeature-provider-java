@@ -7,8 +7,6 @@ import dev.openfeature.sdk.exceptions.ParseError;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Holds one evaluation response and resolves a flag from it, applying any client-side rules the
@@ -19,14 +17,23 @@ class OctopusContext {
     private static final System.Logger logger = System.getLogger(OctopusContext.class.getName());
 
     private final EvaluationResponse evaluationResponse;
-    private final Set<String> warnedSlugs = ConcurrentHashMap.newKeySet();
+    private final UnknownSlugs unknownSlugs;
 
     OctopusContext(EvaluationResponse evaluationResponse) {
+        this(evaluationResponse, new UnknownSlugs());
+    }
+
+    OctopusContext(EvaluationResponse evaluationResponse, UnknownSlugs unknownSlugs) {
         this.evaluationResponse = evaluationResponse;
+        this.unknownSlugs = unknownSlugs;
     }
 
     static OctopusContext empty() {
         return new OctopusContext(new EvaluationResponse(List.of(), new byte[0]));
+    }
+
+    static OctopusContext empty(UnknownSlugs unknownSlugs) {
+        return new OctopusContext(new EvaluationResponse(List.of(), new byte[0]), unknownSlugs);
     }
 
     byte[] getContentHash() {
@@ -51,9 +58,7 @@ class OctopusContext {
         var serverSideEvaluation = findEvaluationBySlug(slug);
 
         if (serverSideEvaluation == null) {
-            // Warned once per slug: an unrecognised slug is usually a typo, which would otherwise log on
-            // every evaluation of it.
-            if (slug != null && warnedSlugs.add(slug.toLowerCase())) {
+            if (unknownSlugs.shouldWarnAbout(slug)) {
                 logger.log(System.Logger.Level.WARNING, String.format(
                         "The slug %s did not match any of your Octopus Feature Flags. Please double check your slug and try again.",
                         slug));
@@ -68,7 +73,7 @@ class OctopusContext {
         } catch (ParseError e) {
             // The message is shared verbatim with the other provider libraries, so it names the problem
             // but not the flag. Logging the slug beside it is what makes a malformed response traceable
-            // when a rollout affects several flags at once.
+            // when several flags are affected at once.
             logger.log(System.Logger.Level.WARNING, String.format(
                     "Could not evaluate feature flag %s: %s", slug, e.getMessage()));
             throw e;
