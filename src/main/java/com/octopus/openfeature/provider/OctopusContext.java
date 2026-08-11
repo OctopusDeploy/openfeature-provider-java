@@ -34,7 +34,7 @@ class OctopusContext {
 
     ServerSideEvaluation findEvaluationBySlug(String slug) {
         var evaluations = evaluationResponse.getEvaluations();
-        if (evaluations == null) {
+        if (slug == null || evaluations == null) {
             return null;
         }
 
@@ -52,7 +52,7 @@ class OctopusContext {
         if (serverSideEvaluation == null) {
             // Warned once per slug: an unrecognised slug is usually a typo, which would otherwise log on
             // every evaluation of it.
-            if (warnedSlugs.add(slug.toLowerCase())) {
+            if (slug != null && warnedSlugs.add(slug.toLowerCase())) {
                 logger.log(System.Logger.Level.WARNING, String.format(
                         "The slug %s did not match any of your Octopus Feature Flags. Please double check your slug and try again.",
                         slug));

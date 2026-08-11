@@ -72,6 +72,19 @@ class OctopusContextTests {
     }
 
     @Test
+    void aNullFlagKeyThrowsFlagNotFoundRatherThanFailing() {
+        // The slug comes from the caller, so an unset config value arrives here as null. v3 answered
+        // FLAG_NOT_FOUND; anything else surfaces as ErrorCode.GENERAL with a raw exception message.
+        var context = contextWith(serverResolved("feature-a", true));
+
+        assertThatThrownBy(() -> context.evaluate(null, null))
+                .isInstanceOf(FlagNotFoundError.class)
+                .extracting(thrown -> ((FlagNotFoundError) thrown).getErrorCode())
+                .isEqualTo(ErrorCode.FLAG_NOT_FOUND);
+        assertThat(context.findEvaluationBySlug(null)).isNull();
+    }
+
+    @Test
     void anEmptyResponseThrowsFlagNotFoundForEveryFlag() {
         assertThatThrownBy(() -> OctopusContext.empty().evaluate("feature-a", null))
                 .isInstanceOf(FlagNotFoundError.class);
