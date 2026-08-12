@@ -7,17 +7,17 @@ import dev.openfeature.sdk.exceptions.TypeMismatchError;
 public class OctopusProvider extends EventProvider {
     private static final String PROVIDER_NAME = "octopus-java-provider";
     private final OctopusConfiguration config;
-    private final OctopusContextProvider contextProvider;
+    private final FeatureFlagEvaluatorCache evaluatorCache;
     
     public OctopusProvider(OctopusConfiguration config) {
        this.config = config; 
-       this.contextProvider = new OctopusContextProvider(config, new OctopusClient(config));
+       this.evaluatorCache = new FeatureFlagEvaluatorCache(config, new FeatureFlagApiClient(config));
     }
 
-    // For testing: accepts a pre-built context provider instead of constructing one from config.
-    OctopusProvider(OctopusContextProvider contextProvider) {
+    // For testing: accepts a pre-built evaluator cache instead of constructing one from config.
+    OctopusProvider(FeatureFlagEvaluatorCache evaluatorCache) {
         this.config = null;
-        this.contextProvider = contextProvider;
+        this.evaluatorCache = evaluatorCache;
     }
 
     @Override
@@ -26,18 +26,18 @@ public class OctopusProvider extends EventProvider {
     @Override
     public void initialize(EvaluationContext evaluationContext) throws Exception {
         super.initialize(evaluationContext);
-        contextProvider.initialize();
+        evaluatorCache.initialize();
     }
 
     @Override
     public void shutdown() {
         super.shutdown();
-        contextProvider.shutdown();
+        evaluatorCache.shutdown();
     }
 
     @Override
     public ProviderEvaluation<Boolean> getBooleanEvaluation(String flagKey, Boolean defaultValue, EvaluationContext evaluationContext) {
-        return contextProvider.getOctopusContext().evaluate(flagKey, evaluationContext);
+        return evaluatorCache.getEvaluator().evaluate(flagKey, evaluationContext);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class OctopusProvider extends EventProvider {
     }
 
     private RuntimeException rejectNonBooleanEvaluation(String flagKey) {
-        var evaluation = contextProvider.getOctopusContext().findEvaluationBySlug(flagKey);
+        var evaluation = evaluatorCache.getEvaluator().findEvaluationBySlug(flagKey);
         if (evaluation == null) {
             return new FlagNotFoundError(
                     "The slug provided did not match any of your Octopus Feature Flags. Please double check your slug and try again.");

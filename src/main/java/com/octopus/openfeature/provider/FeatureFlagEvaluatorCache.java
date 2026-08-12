@@ -1,19 +1,19 @@
 package com.octopus.openfeature.provider;
 
-class OctopusContextProvider {
+class FeatureFlagEvaluatorCache {
     private final OctopusConfiguration config;
-    private final OctopusClient client;
+    private final FeatureFlagApiClient client;
     private boolean initialized = false;
-    private OctopusContext currentContext = OctopusContext.empty();
+    private FeatureFlagEvaluator currentEvaluator = FeatureFlagEvaluator.empty();
     private Thread refreshThread;
-    private static final System.Logger logger = System.getLogger(OctopusClient.class.getName());
+    private static final System.Logger logger = System.getLogger(FeatureFlagApiClient.class.getName());
 
-    OctopusContextProvider(OctopusConfiguration config, OctopusClient client) {
+    FeatureFlagEvaluatorCache(OctopusConfiguration config, FeatureFlagApiClient client) {
         this.config = config;
         this.client = client;
     }
     
-    OctopusContext getOctopusContext() { return currentContext; }
+    FeatureFlagEvaluator getFeatureFlagEvaluator() { return currentEvaluator; }
 
     void initialize() {
         if (initialized) {
@@ -22,12 +22,12 @@ class OctopusContextProvider {
 
         try {
             var evaluationResponse = client.getServerSideEvaluations();
-            currentContext = evaluationResponse == null
-                    ? OctopusContext.empty()
-                    : new OctopusContext(evaluationResponse);
+            currentEvaluator = evaluationResponse == null
+                    ? FeatureFlagEvaluator.empty()
+                    : new FeatureFlagEvaluator(evaluationResponse);
         } catch (Exception e) {
             logger.log(System.Logger.Level.ERROR, "Failed to retrieve feature flag evaluations during initialization. Falling back to empty context, defaults will be used during evaluation.", e);
-            currentContext = OctopusContext.empty();
+            currentEvaluator = FeatureFlagEvaluator.empty();
         }
 
         // run the refresh loop in the background
@@ -47,10 +47,10 @@ class OctopusContextProvider {
             try {
                 Thread.sleep(config.getCacheDuration().toMillis());
 
-                if (client.haveFeatureFlagsChanged(currentContext.getContentHash())) {
+                if (client.haveFeaturesChanged(currentEvaluator.getContentHash())) {
                     var evaluationResponse = client.getServerSideEvaluations();
                     if (evaluationResponse != null) {
-                        currentContext = new OctopusContext(evaluationResponse);
+                        currentEvaluator = new FeatureFlagEvaluator(evaluationResponse);
                     } else {
                         logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature flag evaluations. Retaining existing context which may be stale.");
                     }

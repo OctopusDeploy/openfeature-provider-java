@@ -12,17 +12,17 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
 
-class OctopusClient {
+class FeatureFlagApiClient {
 
     private final OctopusConfiguration config;
-    private static final System.Logger logger = System.getLogger(OctopusClient.class.getName());
+    private static final System.Logger logger = System.getLogger(FeatureFlagApiClient.class.getName());
     private static final int StatusCodeNotFound = 404;
     private static final String PROVIDER_VERSION = loadProviderVersion();
 
     private static String loadProviderVersion() {
         try {
             var projectProperties = new Properties();
-            try (var resourceStream = OctopusClient.class.getClassLoader().getResourceAsStream("project.properties"))
+            try (var resourceStream = FeatureFlagApiClient.class.getClassLoader().getResourceAsStream("project.properties"))
             {
                 if(resourceStream == null) {
                     logger.log(System.Logger.Level.WARNING, "Unable to load project properties to determine provider version.");
@@ -39,11 +39,11 @@ class OctopusClient {
         }
     }
 
-    OctopusClient(OctopusConfiguration config) {
+    FeatureFlagApiClient(OctopusConfiguration config) {
         this.config = config;
     }
 
-    Boolean haveFeatureFlagsChanged(byte[] contentHash) throws IOException, InterruptedException {
+    Boolean haveFeaturesChanged(byte[] contentHash) throws IOException, InterruptedException {
         if (contentHash.length == 0) {
             return true;
         }
@@ -81,7 +81,7 @@ class OctopusClient {
         }
         var evaluations = OctopusObjectMapper.INSTANCE.readValue(httpResponse.body(), new TypeReference<List<ServerSideEvaluation>>() {});
         if (evaluations == null) {
-            // Returning null leaves the cache on its previous context, or on the empty one, both of
+            // Returning null leaves the cache on its previous evaluator, or on the empty one, both of
             // which keep refetching. Storing a response with a usable content hash would not: the check
             // endpoint would report no change and the provider would never recover.
             logger.log(System.Logger.Level.WARNING, String.format("Feature flag response content from %s was empty", evaluationsURI.toString()));

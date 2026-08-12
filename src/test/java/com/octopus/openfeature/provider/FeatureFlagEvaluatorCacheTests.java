@@ -11,9 +11,9 @@ import java.util.logging.Logger;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
-class OctopusContextProviderTests {
+class FeatureFlagEvaluatorCacheTests {
 
-    static class MockOctopusFeatureClient extends OctopusClient {
+    static class MockOctopusFeatureClient extends FeatureFlagApiClient {
 
         private volatile EvaluationResponse evaluationResponse;
 
@@ -27,7 +27,7 @@ class OctopusContextProviderTests {
         }
 
         @Override
-        Boolean haveFeatureFlagsChanged(byte[] contentHash) {
+        Boolean haveFeaturesChanged(byte[] contentHash) {
             return true;
         }
 
@@ -61,13 +61,13 @@ class OctopusContextProviderTests {
 
         var client = new MockOctopusFeatureClient(response(true, initialHash));
 
-        var provider = new OctopusContextProvider(configuration, client);
+        var provider = new FeatureFlagEvaluatorCache(configuration, client);
         provider.initialize();
 
         try {
             // Validate the initial state
-            assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(initialHash);
-            assertThat(provider.getOctopusContext().evaluate("test-feature", null).getValue()).isTrue();
+            assertThat(provider.getEvaluator().getContentHash()).isEqualTo(initialHash);
+            assertThat(provider.getEvaluator().evaluate("test-feature", null).getValue()).isTrue();
 
             // Simulate a change in the available feature toggles
             client.changeEvaluations(response(false, updatedHash));
@@ -76,8 +76,8 @@ class OctopusContextProviderTests {
             Thread.sleep(500);
 
             // Validate the updated toggles are available
-            assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(updatedHash);
-            assertThat(provider.getOctopusContext().evaluate("test-feature", null).getValue()).isFalse();
+            assertThat(provider.getEvaluator().getContentHash()).isEqualTo(updatedHash);
+            assertThat(provider.getEvaluator().evaluate("test-feature", null).getValue()).isFalse();
 
         } finally {
             provider.shutdown();
@@ -85,14 +85,14 @@ class OctopusContextProviderTests {
     }
 
     @Test
-    void whenInitialized_AndRefreshFails_RetainsExistingContextAndLogsError() throws InterruptedException {
+    void whenInitialized_AndRefreshFails_RetainsTheExistingEvaluatorAndLogsError() throws InterruptedException {
 
         byte[] contentHash = {0x01, 0x02, 0x03, 0x04};
 
         var client = new MockOctopusFeatureClient(response(true, contentHash));
 
         var logMessages = new ArrayList<String>();
-        var julLogger = Logger.getLogger(OctopusClient.class.getName());
+        var julLogger = Logger.getLogger(FeatureFlagEvaluatorCache.class.getName());
         var handler = new Handler() {
             @Override public void publish(LogRecord record) { logMessages.add(record.getMessage()); }
             @Override public void flush() {}
@@ -100,7 +100,7 @@ class OctopusContextProviderTests {
         };
         julLogger.addHandler(handler);
 
-        var provider = new OctopusContextProvider(configuration, client);
+        var provider = new FeatureFlagEvaluatorCache(configuration, client);
 
         try {
             provider.initialize();
@@ -115,8 +115,8 @@ class OctopusContextProviderTests {
             Thread.sleep(500);
 
             // Validate that the existing context is retained and an error was logged
-            assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(contentHash);
-            assertThat(provider.getOctopusContext().evaluate("test-feature", null).getValue()).isTrue();
+            assertThat(provider.getEvaluator().getContentHash()).isEqualTo(contentHash);
+            assertThat(provider.getEvaluator().evaluate("test-feature", null).getValue()).isTrue();
             assertThat(logMessages).anyMatch(m -> m.startsWith("Failed to retrieve updated feature flag evaluations"));
 
         } finally {
@@ -127,28 +127,28 @@ class OctopusContextProviderTests {
     }
 
     @Test
-    void whenInitialFetchReturnsNothing_AndRefreshSucceeds_ContextIsPopulated() throws InterruptedException {
+    void whenInitialFetchReturnsNothing_AndRefreshSucceeds_TheEvaluatorIsPopulated() throws InterruptedException {
 
         byte[] contentHash = {0x01, 0x02, 0x03, 0x04};
 
-        var julLogger = Logger.getLogger(OctopusClient.class.getName());
+        var julLogger = Logger.getLogger(FeatureFlagEvaluatorCache.class.getName());
         julLogger.setUseParentHandlers(false);
 
         // Initialize with null so first fetch fails
         var client = new MockOctopusFeatureClient(null);
-        var provider = new OctopusContextProvider(configuration, client);
+        var provider = new FeatureFlagEvaluatorCache(configuration, client);
         provider.initialize();
 
         try {
             // Check that the context is empty
-            assertThat(provider.getOctopusContext().getContentHash()).isEmpty();
+            assertThat(provider.getEvaluator().getContentHash()).isEmpty();
 
             // Update client to return valid toggles and wait for refresh
             client.changeEvaluations(response(false, contentHash));
             Thread.sleep(5000);
 
             // Assert that the context is now correctly populated
-            assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(contentHash);
+            assertThat(provider.getEvaluator().getContentHash()).isEqualTo(contentHash);
 
         } finally {
             julLogger.setUseParentHandlers(true);
@@ -157,13 +157,13 @@ class OctopusContextProviderTests {
     }
 
     @Test
-    void whenRefreshReturnsNothing_AndSubsequentRefreshSucceeds_ContextIsUpdated() throws InterruptedException {
+    void whenRefreshReturnsNothing_AndSubsequentRefreshSucceeds_TheEvaluatorIsUpdated() throws InterruptedException {
 
         byte[] initialHash = {0x01, 0x02, 0x03, 0x04};
         byte[] updatedHash = {0x01, 0x02, 0x03, 0x05};
 
         var logMessages = new CopyOnWriteArrayList<String>();
-        var julLogger = Logger.getLogger(OctopusClient.class.getName());
+        var julLogger = Logger.getLogger(FeatureFlagEvaluatorCache.class.getName());
         var handler = new Handler() {
             @Override public void publish(LogRecord record) { logMessages.add(record.getMessage()); }
             @Override public void flush() {}
@@ -173,7 +173,7 @@ class OctopusContextProviderTests {
 
         // initialize with a client that returns valid toggles
         var client = new MockOctopusFeatureClient(response(true, initialHash));
-        var provider = new OctopusContextProvider(configuration, client);
+        var provider = new FeatureFlagEvaluatorCache(configuration, client);
         provider.initialize();
 
         // Stop warnings about refresh failures from reaching the test output
@@ -186,13 +186,13 @@ class OctopusContextProviderTests {
 
             // Assert that failed refresh is logged and old context is retained
             assertThat(logMessages).anyMatch(m -> m.startsWith("Failed to retrieve updated feature flag evaluations"));
-            assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(initialHash);
+            assertThat(provider.getEvaluator().getContentHash()).isEqualTo(initialHash);
 
             // Update client to return valid toggles again and wait for refresh
             client.changeEvaluations(response(false, updatedHash));
             Thread.sleep(5000);
 
-            assertThat(provider.getOctopusContext().getContentHash()).isEqualTo(updatedHash);
+            assertThat(provider.getEvaluator().getContentHash()).isEqualTo(updatedHash);
 
         } finally {
             julLogger.removeHandler(handler);
@@ -201,7 +201,7 @@ class OctopusContextProviderTests {
         }
     }
 
-    static class ThrowsOnRefreshClient extends OctopusClient {
+    static class ThrowsOnRefreshClient extends FeatureFlagApiClient {
 
         static final String ERROR_MESSAGE = "Oops! Simulated refresh error";
         private final EvaluationResponse initial;
@@ -212,7 +212,7 @@ class OctopusContextProviderTests {
         }
 
         @Override
-        Boolean haveFeatureFlagsChanged(byte[] contentHash) {
+        Boolean haveFeaturesChanged(byte[] contentHash) {
             throw new RuntimeException(ERROR_MESSAGE);
         }
 
@@ -228,7 +228,7 @@ class OctopusContextProviderTests {
         byte[] contentHash = {0x01, 0x02, 0x03, 0x04};
 
         var logRecords = new CopyOnWriteArrayList<LogRecord>();
-        var julLogger = Logger.getLogger(OctopusClient.class.getName());
+        var julLogger = Logger.getLogger(FeatureFlagEvaluatorCache.class.getName());
         var handler = new Handler() {
             @Override public void publish(LogRecord record) { logRecords.add(record); }
             @Override public void flush() {}
@@ -240,7 +240,7 @@ class OctopusContextProviderTests {
 
         // Initialize with a client that will throw on refresh
         var client = new ThrowsOnRefreshClient(response(true, contentHash));
-        var provider = new OctopusContextProvider(configuration, client);
+        var provider = new FeatureFlagEvaluatorCache(configuration, client);
         provider.initialize();
 
         try {
