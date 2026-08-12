@@ -5,7 +5,10 @@ import dev.openfeature.sdk.ProviderEvaluation;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Holds one evaluation response and resolves a flag from it, applying any client-side rules the
@@ -16,23 +19,21 @@ class OctopusContext {
     private static final System.Logger logger = System.getLogger(OctopusContext.class.getName());
 
     private final EvaluationResponse evaluationResponse;
-    private final UnknownSlugs unknownSlugs;
+
+    /**
+     * The slugs already warned about. An unrecognised slug is usually a typo, which would otherwise log
+     * on every evaluation of it. Held here rather than on the cache, matching the other provider
+     * libraries: a new response starts a new set, so a persistent typo is reported again whenever the
+     * flags change.
+     */
+    private final Set<String> warnedSlugs = ConcurrentHashMap.newKeySet();
 
     OctopusContext(EvaluationResponse evaluationResponse) {
-        this(evaluationResponse, new UnknownSlugs());
-    }
-
-    OctopusContext(EvaluationResponse evaluationResponse, UnknownSlugs unknownSlugs) {
         this.evaluationResponse = evaluationResponse;
-        this.unknownSlugs = unknownSlugs;
     }
 
     static OctopusContext empty() {
         return new OctopusContext(new EvaluationResponse(List.of(), new byte[0]));
-    }
-
-    static OctopusContext empty(UnknownSlugs unknownSlugs) {
-        return new OctopusContext(new EvaluationResponse(List.of(), new byte[0]), unknownSlugs);
     }
 
     byte[] getContentHash() {
@@ -57,7 +58,9 @@ class OctopusContext {
         var serverSideEvaluation = findEvaluationBySlug(slug);
 
         if (serverSideEvaluation == null) {
-            if (unknownSlugs.shouldWarnAbout(slug)) {
+            // Locale.ROOT, not the default locale: under a Turkish locale "MY-FLAG-I" lowercases to a
+            // dotless "my-flag-ı", which would not match "my-flag-i" and so would warn twice.
+            if (warnedSlugs.add(slug == null ? "" : slug.toLowerCase(Locale.ROOT))) {
                 logger.log(System.Logger.Level.WARNING, String.format(
                         "The slug %s did not match any of your Octopus Feature Flags. Please double check your slug and try again.",
                         slug));

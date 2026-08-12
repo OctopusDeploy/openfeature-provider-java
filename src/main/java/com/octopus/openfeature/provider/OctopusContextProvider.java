@@ -4,8 +4,7 @@ class OctopusContextProvider {
     private final OctopusConfiguration config;
     private final OctopusClient client;
     private boolean initialized = false;
-    private final UnknownSlugs unknownSlugs = new UnknownSlugs();
-    private OctopusContext currentContext = OctopusContext.empty(unknownSlugs);
+    private OctopusContext currentContext = OctopusContext.empty();
     private Thread refreshThread;
     private static final System.Logger logger = System.getLogger(OctopusClient.class.getName());
 
@@ -24,11 +23,11 @@ class OctopusContextProvider {
         try {
             var evaluationResponse = client.getServerSideEvaluations();
             currentContext = evaluationResponse == null
-                    ? OctopusContext.empty(unknownSlugs)
-                    : new OctopusContext(evaluationResponse, unknownSlugs);
+                    ? OctopusContext.empty()
+                    : new OctopusContext(evaluationResponse);
         } catch (Exception e) {
             logger.log(System.Logger.Level.ERROR, "Failed to retrieve feature flag evaluations during initialization. Falling back to empty context, defaults will be used during evaluation.", e);
-            currentContext = OctopusContext.empty(unknownSlugs);
+            currentContext = OctopusContext.empty();
         }
 
         // run the refresh loop in the background
@@ -51,7 +50,7 @@ class OctopusContextProvider {
                 if (client.haveFeatureFlagsChanged(currentContext.getContentHash())) {
                     var evaluationResponse = client.getServerSideEvaluations();
                     if (evaluationResponse != null) {
-                        currentContext = new OctopusContext(evaluationResponse, unknownSlugs);
+                        currentContext = new OctopusContext(evaluationResponse);
                     } else {
                         logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature flag evaluations. Retaining existing context which may be stale.");
                     }
