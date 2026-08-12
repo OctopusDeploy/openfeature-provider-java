@@ -1,4 +1,4 @@
-package com.octopus.openfeature.provider.v4;
+package com.octopus.openfeature.provider;
 
 /**
  * Reasons returned alongside a client-side evaluation. Both match the strings the Feature Flags service

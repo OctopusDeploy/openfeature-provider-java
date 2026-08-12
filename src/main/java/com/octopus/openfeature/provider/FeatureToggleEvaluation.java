@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Optional;
 
+// TODO(BMBB-780): a v3 type, unused since the switch to v4.
 class FeatureToggleEvaluation {
     private final String slug;
     private final boolean isEnabled;

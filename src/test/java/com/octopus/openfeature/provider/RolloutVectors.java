@@ -14,16 +14,13 @@ import java.util.stream.Stream;
  * NOT modify the input arguments or expected values — doing so would mask a real divergence in
  * evaluation behaviour between libraries and defeat the purpose of these cases.
  *
- * <p>Public and in this package so both the v3 path and the v4 rollout can consume one list: the two
- * hold separate copies of the hash, and a single set of vectors is what stops them drifting apart.
- * Test-only, so it is never published.
  */
-public final class RolloutVectors {
+final class RolloutVectors {
 
     private RolloutVectors() {
     }
 
-    public static Stream<Arguments> cases() {
+    static Stream<Arguments> cases() {
         return Stream.of(
                 Arguments.of("ef70b4c0-1773-44a3-9b95-f239ae97d9db", "780c4b16-a510-49fa-a2b2-bbd1c38dbe31", 48),
                 Arguments.of("055665f0-fbb3-484e-8ef1-52125425b7b2", "6a33c211-5af8-4c34-ba82-4d79846cb045", 85),

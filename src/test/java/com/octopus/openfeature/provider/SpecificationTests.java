@@ -21,6 +21,7 @@ import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -71,6 +72,14 @@ class SpecificationTests {
         assertThat(result.getErrorCode())
                 .as("[%s] %s → errorCode", fileName, description)
                 .isEqualTo(mapErrorCode(testCase.expected.errorCode));
+
+        // Fixtures only state a reason where the specification pins one down, so an absent reason is not
+        // an assertion that the provider returned none.
+        if (testCase.expected.reason != null) {
+            assertThat(result.getReason())
+                    .as("[%s] %s → reason", fileName, description)
+                    .isEqualTo(testCase.expected.reason);
+        }
     }
 
     static Stream<Arguments> fixtureTestCases() throws IOException {
@@ -104,11 +113,16 @@ class SpecificationTests {
     }
 
     private static EvaluationContext buildContext(Map<String, String> context) {
-        MutableContext ctx = new MutableContext();
-        if (context != null) {
-            context.forEach(ctx::add);
+        if (context == null) {
+            return new MutableContext();
         }
-        return ctx;
+
+        // A null attribute is present in the context but holds no string, which is what a fixture means
+        // by a null value — not an attribute the caller left out. MutableContext.add() has no overload
+        // for a bare Value, so the attributes go in through the map constructor.
+        Map<String, Value> attributes = new LinkedHashMap<>();
+        context.forEach((key, value) -> attributes.put(key, value == null ? new Value() : new Value(value)));
+        return new MutableContext(attributes);
     }
 
     private static ErrorCode mapErrorCode(String code) {
@@ -155,6 +169,7 @@ class SpecificationTests {
 
     static class FixtureExpected {
         public boolean value;
+        public String reason;
         public String errorCode;
     }
 

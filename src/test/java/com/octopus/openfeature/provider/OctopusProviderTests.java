@@ -8,7 +8,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,11 +18,11 @@ class OctopusProviderTests {
 
     @BeforeEach
     void setup() throws Exception {
-        var toggles = new FeatureToggles(
-                List.of(new FeatureToggleEvaluation("feature-a", true, "key", Collections.emptyList(), 100)),
+        var response = new EvaluationResponse(
+                List.of(new ServerSideEvaluation("feature-a", true, "The flag is enabled for this environment.", null, null)),
                 new byte[0]
         );
-        var provider = new OctopusProvider(new FakeOctopusContextProvider(new OctopusContext(toggles)));
+        var provider = new OctopusProvider(new FakeOctopusContextProvider(new OctopusContext(response)));
         OpenFeatureAPI.getInstance().setProviderAndWait(provider);
         client = OpenFeatureAPI.getInstance().getClient();
     }

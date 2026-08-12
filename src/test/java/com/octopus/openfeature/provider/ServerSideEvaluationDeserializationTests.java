@@ -1,8 +1,7 @@
-package com.octopus.openfeature.provider.v4;
+package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.octopus.openfeature.provider.TestObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
@@ -18,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class ServerSideEvaluationDeserializationTests {
 
-    private final ObjectMapper objectMapper = TestObjectMapper.INSTANCE;
+    private final ObjectMapper objectMapper = OctopusObjectMapper.INSTANCE;
 
     private InputStream resource(String name) {
         return getClass().getResourceAsStream(name);
