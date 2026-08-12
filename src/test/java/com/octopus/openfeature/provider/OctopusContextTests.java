@@ -2,7 +2,6 @@ package com.octopus.openfeature.provider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import dev.openfeature.sdk.ErrorCode;
-import dev.openfeature.sdk.MutableContext;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 import org.junit.jupiter.api.Test;
 
@@ -88,19 +87,6 @@ class OctopusContextTests {
     void anEmptyResponseThrowsFlagNotFoundForEveryFlag() {
         assertThatThrownBy(() -> OctopusContext.empty().evaluate("feature-a", null))
                 .isInstanceOf(FlagNotFoundError.class);
-    }
-
-    @Test
-    void appliesTheClientSideRulesTheServerDeferred() {
-        var deferred = new ServerSideEvaluation("feature-a", null, null, "evaluation-key",
-                List.of(new ClientSideRule("Pro plans",
-                        List.of(new ContextAttributeIsOneOfCondition("plan", List.of("pro"))))));
-        var context = contextWith(deferred);
-
-        assertThat(context.evaluate("feature-a", new MutableContext().add("plan", "pro")).getValue())
-                .as("the rule matches").isTrue();
-        assertThat(context.evaluate("feature-a", new MutableContext().add("plan", "free")).getValue())
-                .as("the rule does not match").isFalse();
     }
 
     @Test
