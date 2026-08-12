@@ -114,7 +114,7 @@ class FeatureFlagEvaluatorCacheTests {
             // Wait for the cache to expire
             Thread.sleep(500);
 
-            // Validate that the existing context is retained and an error was logged
+            // Validate that the existing evaluations are retained and an error was logged
             assertThat(provider.getEvaluator().getContentHash()).isEqualTo(contentHash);
             assertThat(provider.getEvaluator().evaluate("test-feature", null).getValue()).isTrue();
             assertThat(logMessages).anyMatch(m -> m.startsWith("Failed to retrieve updated feature flag evaluations"));

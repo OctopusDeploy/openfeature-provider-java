@@ -26,7 +26,7 @@ class FeatureFlagEvaluatorCache {
                     ? FeatureFlagEvaluator.empty()
                     : new FeatureFlagEvaluator(evaluationResponse);
         } catch (Exception e) {
-            logger.log(System.Logger.Level.ERROR, "Failed to retrieve feature flag evaluations during initialization. Falling back to empty context, defaults will be used during evaluation.", e);
+            logger.log(System.Logger.Level.ERROR, "Failed to retrieve feature flag evaluations during initialization. Falling back to no evaluations, defaults will be used during evaluation.", e);
             currentEvaluator = FeatureFlagEvaluator.empty();
         }
 
@@ -39,7 +39,7 @@ class FeatureFlagEvaluatorCache {
 
     /* 
      This method will retry forever on failures, until a shutdown event triggers the cancellation token.
-     We never want to cease trying to refresh the evaluation context while the provider is still alive,
+     We never want to cease trying to refresh the evaluator while the provider is still alive,
      otherwise the state will be left stale whilst the consumer continues to make use it.
      */
     void refresh() {
@@ -52,14 +52,14 @@ class FeatureFlagEvaluatorCache {
                     if (evaluationResponse != null) {
                         currentEvaluator = new FeatureFlagEvaluator(evaluationResponse);
                     } else {
-                        logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature flag evaluations. Retaining existing context which may be stale.");
+                        logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature flag evaluations. Retaining the existing evaluations, which may be stale.");
                     }
                 }
             } catch (InterruptedException e) {
                 // the loop will be terminated and the thread will finish
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature flag evaluations. Retaining existing context which may be stale.", e);
+                logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature flag evaluations. Retaining the existing evaluations, which may be stale.", e);
             }
         }
     }
