@@ -30,8 +30,7 @@ public class OctopusFeatureConfiguration {
         return cacheDuration;
     }
 
-    public Duration setCacheDuration(Duration cacheDuration) {
+    public void setCacheDuration(Duration cacheDuration) {
         this.cacheDuration = cacheDuration;
-        return this.cacheDuration;
     }
 }
