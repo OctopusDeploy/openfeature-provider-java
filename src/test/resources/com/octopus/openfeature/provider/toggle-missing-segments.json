@@ -1,6 +1,0 @@
-{
-  "slug": "my-feature",
-  "isEnabled": true,
-  "evaluationKey": "eval-key-1",
-  "clientRolloutPercentage": 100
-}

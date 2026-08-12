@@ -53,7 +53,6 @@ final class PercentageByContextCondition extends ClientSideCondition {
             return percentage >= 100;
         }
 
-        // Shared with v3 so a rollout lands on the same users across versions and provider libraries.
         return PercentageRollout.includes(context.getEvaluationKey(), targetingKey, percentage);
     }
 }

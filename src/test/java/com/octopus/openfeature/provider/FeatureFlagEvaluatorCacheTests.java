@@ -69,13 +69,13 @@ class FeatureFlagEvaluatorCacheTests {
             assertThat(provider.getEvaluator().getContentHash()).isEqualTo(initialHash);
             assertThat(provider.getEvaluator().evaluate("test-feature", null).getValue()).isTrue();
 
-            // Simulate a change in the available feature toggles
+            // Simulate a change in the available feature flag evaluations
             client.changeEvaluations(response(false, updatedHash));
 
             // Wait for the cache to expire
             Thread.sleep(500);
 
-            // Validate the updated toggles are available
+            // Validate the updated evaluations are available
             assertThat(provider.getEvaluator().getContentHash()).isEqualTo(updatedHash);
             assertThat(provider.getEvaluator().evaluate("test-feature", null).getValue()).isFalse();
 
@@ -143,7 +143,7 @@ class FeatureFlagEvaluatorCacheTests {
             // Check that the evaluator holds no evaluations
             assertThat(provider.getEvaluator().getContentHash()).isEmpty();
 
-            // Update client to return valid toggles and wait for refresh
+            // Update client to return valid evaluations and wait for refresh
             client.changeEvaluations(response(false, contentHash));
             Thread.sleep(5000);
 
@@ -171,7 +171,7 @@ class FeatureFlagEvaluatorCacheTests {
         };
         julLogger.addHandler(handler);
 
-        // initialize with a client that returns valid toggles
+        // initialize with a client that returns valid evaluations
         var client = new MockFeatureFlagApiClient(response(true, initialHash));
         var provider = new FeatureFlagEvaluatorCache(configuration, client);
         provider.initialize();
@@ -188,7 +188,7 @@ class FeatureFlagEvaluatorCacheTests {
             assertThat(logMessages).anyMatch(m -> m.startsWith("Failed to retrieve updated feature flag evaluations"));
             assertThat(provider.getEvaluator().getContentHash()).isEqualTo(initialHash);
 
-            // Update client to return valid toggles again and wait for refresh
+            // Update client to return valid evaluations again and wait for refresh
             client.changeEvaluations(response(false, updatedHash));
             Thread.sleep(5000);
 
