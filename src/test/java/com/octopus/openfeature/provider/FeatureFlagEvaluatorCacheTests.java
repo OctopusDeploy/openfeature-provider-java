@@ -13,11 +13,11 @@ import org.junit.jupiter.api.Test;
 
 class FeatureFlagEvaluatorCacheTests {
 
-    static class MockOctopusFeatureClient extends FeatureFlagApiClient {
+    static class MockFeatureFlagApiClient extends FeatureFlagApiClient {
 
         private volatile EvaluationResponse evaluationResponse;
 
-        MockOctopusFeatureClient(EvaluationResponse evaluationResponse) {
+        MockFeatureFlagApiClient(EvaluationResponse evaluationResponse) {
             super(null);
             this.evaluationResponse = evaluationResponse;
         }
@@ -59,7 +59,7 @@ class FeatureFlagEvaluatorCacheTests {
         byte[] initialHash = {0x01, 0x02, 0x03, 0x04};
         byte[] updatedHash = {0x01, 0x02, 0x03, 0x05};
 
-        var client = new MockOctopusFeatureClient(response(true, initialHash));
+        var client = new MockFeatureFlagApiClient(response(true, initialHash));
 
         var provider = new FeatureFlagEvaluatorCache(configuration, client);
         provider.initialize();
@@ -89,7 +89,7 @@ class FeatureFlagEvaluatorCacheTests {
 
         byte[] contentHash = {0x01, 0x02, 0x03, 0x04};
 
-        var client = new MockOctopusFeatureClient(response(true, contentHash));
+        var client = new MockFeatureFlagApiClient(response(true, contentHash));
 
         var logMessages = new ArrayList<String>();
         var julLogger = Logger.getLogger(FeatureFlagEvaluatorCache.class.getName());
@@ -135,19 +135,19 @@ class FeatureFlagEvaluatorCacheTests {
         julLogger.setUseParentHandlers(false);
 
         // Initialize with null so first fetch fails
-        var client = new MockOctopusFeatureClient(null);
+        var client = new MockFeatureFlagApiClient(null);
         var provider = new FeatureFlagEvaluatorCache(configuration, client);
         provider.initialize();
 
         try {
-            // Check that the context is empty
+            // Check that the evaluator holds no evaluations
             assertThat(provider.getEvaluator().getContentHash()).isEmpty();
 
             // Update client to return valid toggles and wait for refresh
             client.changeEvaluations(response(false, contentHash));
             Thread.sleep(5000);
 
-            // Assert that the context is now correctly populated
+            // Assert that the evaluator is now correctly populated
             assertThat(provider.getEvaluator().getContentHash()).isEqualTo(contentHash);
 
         } finally {
@@ -172,7 +172,7 @@ class FeatureFlagEvaluatorCacheTests {
         julLogger.addHandler(handler);
 
         // initialize with a client that returns valid toggles
-        var client = new MockOctopusFeatureClient(response(true, initialHash));
+        var client = new MockFeatureFlagApiClient(response(true, initialHash));
         var provider = new FeatureFlagEvaluatorCache(configuration, client);
         provider.initialize();
 
@@ -184,7 +184,7 @@ class FeatureFlagEvaluatorCacheTests {
             client.changeEvaluations(null);
             Thread.sleep(5000);
 
-            // Assert that failed refresh is logged and old context is retained
+            // Assert that failed refresh is logged and the existing evaluations are retained
             assertThat(logMessages).anyMatch(m -> m.startsWith("Failed to retrieve updated feature flag evaluations"));
             assertThat(provider.getEvaluator().getContentHash()).isEqualTo(initialHash);
 
