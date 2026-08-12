@@ -30,7 +30,8 @@ flowchart TD
 ```
 
 - **Release builds** run after a Release Please PR is merged; the packaged artifact is pushed to Octopus Deploy, from which the release version is published to Maven Central by a manual action.
-- **Prerelease builds** run on pushes to `main`, the nightly schedule, and manual dispatches (all tagged `ci`), and PRs (`pr.<number>.<branch>`). These are pushed to Octopus Deploy and stay internal, except for fork PRs and Dependabot branches, which upload the bundle as a GitHub Actions artifact instead.
+- **Prerelease builds** run on pushes to `main`, the nightly schedule, and manual dispatches (all tagged `ci`), and PRs (`pr.<number>.<branch>`). These are pushed to Octopus Deploy and stay internal, except for fork PRs and Dependabot branches, which are pushed nowhere.
+- **Every build** uploads its bundle as a GitHub Actions artifact named `octopus-openfeature-provider-java.<version>.zip`, kept for 90 days.
 
 
 ## Cutting a release
