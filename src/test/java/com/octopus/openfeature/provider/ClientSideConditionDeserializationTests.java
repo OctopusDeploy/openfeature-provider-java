@@ -27,7 +27,7 @@ class ClientSideConditionDeserializationTests {
     @Test
     void shouldDeserializePercentageByContextConditionToConcreteType() throws Exception {
         var condition = objectMapper.readValue(
-                resource("v4-condition-percentage-by-context.json"), ClientSideCondition.class);
+                resource("condition-percentage-by-context.json"), ClientSideCondition.class);
 
         assertThat(condition)
                 .isInstanceOfSatisfying(PercentageByContextCondition.class,
@@ -37,7 +37,7 @@ class ClientSideConditionDeserializationTests {
     @Test
     void shouldDeserializeContextAttributeIsOneOfConditionToConcreteType() throws Exception {
         var condition = objectMapper.readValue(
-                resource("v4-condition-context-attribute-is-one-of.json"), ClientSideCondition.class);
+                resource("condition-context-attribute-is-one-of.json"), ClientSideCondition.class);
 
         assertThat(condition)
                 .isInstanceOfSatisfying(ContextAttributeIsOneOfCondition.class, isOneOf -> {
@@ -49,7 +49,7 @@ class ClientSideConditionDeserializationTests {
     @Test
     void shouldDeserializeContextAttributeIsNotOneOfConditionToConcreteType() throws Exception {
         var condition = objectMapper.readValue(
-                resource("v4-condition-context-attribute-is-not-one-of.json"), ClientSideCondition.class);
+                resource("condition-context-attribute-is-not-one-of.json"), ClientSideCondition.class);
 
         assertThat(condition)
                 .isInstanceOfSatisfying(ContextAttributeIsNotOneOfCondition.class, isNotOneOf -> {
@@ -61,7 +61,7 @@ class ClientSideConditionDeserializationTests {
     @Test
     void shouldDeserializeMixedConditionListToConcreteTypes() throws Exception {
         var conditions = objectMapper.readValue(
-                resource("v4-condition-list-mixed.json"),
+                resource("condition-list-mixed.json"),
                 new TypeReference<List<ClientSideCondition>>() {}
         );
 
@@ -75,7 +75,7 @@ class ClientSideConditionDeserializationTests {
     @Test
     void shouldDeserializeUnknownConditionTypeToUnknownConditionInsteadOfThrowing() throws Exception {
         var condition = objectMapper.readValue(
-                resource("v4-condition-unknown-type.json"), ClientSideCondition.class);
+                resource("condition-unknown-type.json"), ClientSideCondition.class);
 
         assertThat(condition)
                 .isInstanceOfSatisfying(UnknownCondition.class,
@@ -85,7 +85,7 @@ class ClientSideConditionDeserializationTests {
     @Test
     void shouldDeserializeConditionWithoutTypeDiscriminatorToUnknownCondition() throws Exception {
         var condition = objectMapper.readValue(
-                resource("v4-condition-missing-type.json"), ClientSideCondition.class);
+                resource("condition-missing-type.json"), ClientSideCondition.class);
 
         assertThat(condition)
                 .isInstanceOfSatisfying(UnknownCondition.class,
