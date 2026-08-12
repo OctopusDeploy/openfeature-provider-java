@@ -38,7 +38,7 @@ class Server {
      * Registers the given JSON as the response body for a new unique client token.
      *
      * @param responseJson the JSON array that the evaluations endpoint would return
-     * @return the client identifier (Bearer token) to use in OctopusConfiguration
+     * @return the client identifier (Bearer token) to use in OctopusFeatureConfiguration
      */
     String configure(String responseJson) {
         String token = UUID.randomUUID().toString();

@@ -39,7 +39,7 @@ class FeatureFlagApiClientTests {
 
     @Test
     void buildOctopusClientHeaderValue_withNameOnly_headerValueContainsProductNameAndProviderInformation() {
-        var config = new OctopusConfiguration("test-id", new ProductMetadata("MyProduct"));
+        var config = new OctopusFeatureConfiguration("test-id", new ProductMetadata("MyProduct"));
         var client = new FeatureFlagApiClient(config);
 
         assertThat(client.buildOctopusClientHeaderValue())
@@ -48,7 +48,7 @@ class FeatureFlagApiClientTests {
 
     @Test
     void buildOctopusClientHeaderValue_withNameAndVersion_headerValueContainsProductAndProviderInformation() {
-        var config = new OctopusConfiguration("test-id", new ProductMetadata("MyProduct", "2024.1.0"));
+        var config = new OctopusFeatureConfiguration("test-id", new ProductMetadata("MyProduct", "2024.1.0"));
         var client = new FeatureFlagApiClient(config);
 
         assertThat(client.buildOctopusClientHeaderValue())
@@ -59,7 +59,7 @@ class FeatureFlagApiClientTests {
     void buildOctopusClientHeaderValue_withNameContainingUnsupportedChars_stripsCharsFromHeaderValue() {
         // Note: More character checking tests are in ProductMetadataTests.java
 
-        var config = new OctopusConfiguration("test-id", new ProductMetadata("My Product"));
+        var config = new OctopusFeatureConfiguration("test-id", new ProductMetadata("My Product"));
         var client = new FeatureFlagApiClient(config);
 
         assertThat(client.buildOctopusClientHeaderValue())
@@ -84,7 +84,7 @@ class FeatureFlagApiClientTests {
     }
 
     private FeatureFlagApiClient clientForServer() {
-        var config = new OctopusConfiguration("test-id", new ProductMetadata("MyProduct"));
+        var config = new OctopusFeatureConfiguration("test-id", new ProductMetadata("MyProduct"));
         config.setServerUri(URI.create(wireMock.baseUrl()));
         return new FeatureFlagApiClient(config);
     }

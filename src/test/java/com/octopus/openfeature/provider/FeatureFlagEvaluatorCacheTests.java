@@ -45,10 +45,10 @@ class FeatureFlagEvaluatorCacheTests {
                 contentHash);
     }
 
-    private final OctopusConfiguration configuration = configure();
+    private final OctopusFeatureConfiguration configuration = configure();
 
-    private static OctopusConfiguration configure() {
-        var config = new OctopusConfiguration("token", new ProductMetadata("TestClient"));
+    private static OctopusFeatureConfiguration configure() {
+        var config = new OctopusFeatureConfiguration("token", new ProductMetadata("TestClient"));
         config.setCacheDuration(Duration.ofMillis(100));
         return config;
     }

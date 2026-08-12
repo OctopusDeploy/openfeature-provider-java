@@ -1,19 +1,19 @@
 package com.octopus.openfeature.provider;
 
 class FeatureFlagEvaluatorCache {
-    private final OctopusConfiguration config;
+    private final OctopusFeatureConfiguration config;
     private final FeatureFlagApiClient client;
     private boolean initialized = false;
     private FeatureFlagEvaluator currentEvaluator = FeatureFlagEvaluator.empty();
     private Thread refreshThread;
-    private static final System.Logger logger = System.getLogger(FeatureFlagApiClient.class.getName());
+    private static final System.Logger logger = System.getLogger(FeatureFlagEvaluatorCache.class.getName());
 
-    FeatureFlagEvaluatorCache(OctopusConfiguration config, FeatureFlagApiClient client) {
+    FeatureFlagEvaluatorCache(OctopusFeatureConfiguration config, FeatureFlagApiClient client) {
         this.config = config;
         this.client = client;
     }
     
-    FeatureFlagEvaluator getFeatureFlagEvaluator() { return currentEvaluator; }
+    FeatureFlagEvaluator getEvaluator() { return currentEvaluator; }
 
     void initialize() {
         if (initialized) {

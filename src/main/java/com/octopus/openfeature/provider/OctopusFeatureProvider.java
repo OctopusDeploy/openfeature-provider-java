@@ -4,18 +4,18 @@ import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.FlagNotFoundError;
 import dev.openfeature.sdk.exceptions.TypeMismatchError;
 
-public class OctopusProvider extends EventProvider {
+public class OctopusFeatureProvider extends EventProvider {
     private static final String PROVIDER_NAME = "octopus-java-provider";
-    private final OctopusConfiguration config;
+    private final OctopusFeatureConfiguration config;
     private final FeatureFlagEvaluatorCache evaluatorCache;
     
-    public OctopusProvider(OctopusConfiguration config) {
+    public OctopusFeatureProvider(OctopusFeatureConfiguration config) {
        this.config = config; 
        this.evaluatorCache = new FeatureFlagEvaluatorCache(config, new FeatureFlagApiClient(config));
     }
 
     // For testing: accepts a pre-built evaluator cache instead of constructing one from config.
-    OctopusProvider(FeatureFlagEvaluatorCache evaluatorCache) {
+    OctopusFeatureProvider(FeatureFlagEvaluatorCache evaluatorCache) {
         this.config = null;
         this.evaluatorCache = evaluatorCache;
     }

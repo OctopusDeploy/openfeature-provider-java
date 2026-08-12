@@ -14,7 +14,7 @@ import java.util.*;
 
 class FeatureFlagApiClient {
 
-    private final OctopusConfiguration config;
+    private final OctopusFeatureConfiguration config;
     private static final System.Logger logger = System.getLogger(FeatureFlagApiClient.class.getName());
     private static final int StatusCodeNotFound = 404;
     private static final String PROVIDER_VERSION = loadProviderVersion();
@@ -39,7 +39,7 @@ class FeatureFlagApiClient {
         }
     }
 
-    FeatureFlagApiClient(OctopusConfiguration config) {
+    FeatureFlagApiClient(OctopusFeatureConfiguration config) {
         this.config = config;
     }
 
