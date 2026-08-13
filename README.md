@@ -42,8 +42,8 @@ public class Main {
     public static void main(String[] args) {
         var openFeature = OpenFeatureAPI.getInstance();
         openFeature.setProviderAndWait(
-            new OctopusProvider(
-                new OctopusConfiguration(
+            new OctopusFeatureProvider(
+                new OctopusFeatureConfiguration(
                     "Your Octopus client identifier", 
                     new ProductMetadata("YourProductName", "1.0.0")
                 )

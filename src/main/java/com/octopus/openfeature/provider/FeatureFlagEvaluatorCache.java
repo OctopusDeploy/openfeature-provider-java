@@ -1,0 +1,72 @@
+package com.octopus.openfeature.provider;
+
+class FeatureFlagEvaluatorCache {
+    private final OctopusFeatureConfiguration config;
+    private final FeatureFlagApiClient client;
+    private boolean initialized = false;
+    private FeatureFlagEvaluator currentEvaluator = FeatureFlagEvaluator.empty();
+    private Thread refreshThread;
+    private static final System.Logger logger = System.getLogger(FeatureFlagEvaluatorCache.class.getName());
+
+    FeatureFlagEvaluatorCache(OctopusFeatureConfiguration config, FeatureFlagApiClient client) {
+        this.config = config;
+        this.client = client;
+    }
+    
+    FeatureFlagEvaluator getEvaluator() { return currentEvaluator; }
+
+    void initialize() {
+        if (initialized) {
+            return;
+        }
+
+        try {
+            var evaluationResponse = client.getServerSideEvaluations();
+            currentEvaluator = evaluationResponse == null
+                    ? FeatureFlagEvaluator.empty()
+                    : new FeatureFlagEvaluator(evaluationResponse);
+        } catch (Exception e) {
+            logger.log(System.Logger.Level.ERROR, "Failed to retrieve feature flag evaluations during initialization. Falling back to no evaluations, defaults will be used during evaluation.", e);
+            currentEvaluator = FeatureFlagEvaluator.empty();
+        }
+
+        // run the refresh loop in the background
+        refreshThread = new Thread(this::refresh);
+        refreshThread.start();
+        
+        initialized = true;
+    }
+
+    /* 
+     This method will retry forever on failures, until a shutdown event triggers the cancellation token.
+     We never want to cease trying to refresh the evaluator while the provider is still alive,
+     otherwise the state will be left stale whilst the consumer continues to make use it.
+     */
+    void refresh() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                Thread.sleep(config.getCacheDuration().toMillis());
+
+                if (client.haveFeaturesChanged(currentEvaluator.getContentHash())) {
+                    var evaluationResponse = client.getServerSideEvaluations();
+                    if (evaluationResponse != null) {
+                        currentEvaluator = new FeatureFlagEvaluator(evaluationResponse);
+                    } else {
+                        logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature flag evaluations. Retaining the existing evaluations, which may be stale.");
+                    }
+                }
+            } catch (InterruptedException e) {
+                // the loop will be terminated and the thread will finish
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                logger.log(System.Logger.Level.ERROR, "Failed to retrieve updated feature flag evaluations. Retaining the existing evaluations, which may be stale.", e);
+            }
+        }
+    }
+    
+    void shutdown() {
+        if (refreshThread != null) {
+            refreshThread.interrupt();
+        }
+    }
+}

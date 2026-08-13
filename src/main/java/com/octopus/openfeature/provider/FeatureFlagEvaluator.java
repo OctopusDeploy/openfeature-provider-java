@@ -14,9 +14,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Holds one evaluation response and resolves a flag from it, applying any client-side rules the
  * server deferred.
  */
-class OctopusContext {
+class FeatureFlagEvaluator {
 
-    private static final System.Logger logger = System.getLogger(OctopusContext.class.getName());
+    private static final System.Logger logger = System.getLogger(FeatureFlagEvaluator.class.getName());
 
     private final EvaluationResponse evaluationResponse;
 
@@ -28,12 +28,12 @@ class OctopusContext {
      */
     private final Set<String> warnedSlugs = ConcurrentHashMap.newKeySet();
 
-    OctopusContext(EvaluationResponse evaluationResponse) {
+    FeatureFlagEvaluator(EvaluationResponse evaluationResponse) {
         this.evaluationResponse = evaluationResponse;
     }
 
-    static OctopusContext empty() {
-        return new OctopusContext(new EvaluationResponse(List.of(), new byte[0]));
+    static FeatureFlagEvaluator empty() {
+        return new FeatureFlagEvaluator(new EvaluationResponse(List.of(), new byte[0]));
     }
 
     byte[] getContentHash() {

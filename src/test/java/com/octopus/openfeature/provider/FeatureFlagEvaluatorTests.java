@@ -15,14 +15,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * client-side rules and malformed responses — is covered by {@link ServerSideEvaluationTests} and the
  * suites around it; these cases cover finding the flag, and what happens when it is not there.
  */
-class OctopusContextTests {
+class FeatureFlagEvaluatorTests {
 
     private static ServerSideEvaluation serverResolved(String slug, boolean value) {
         return new ServerSideEvaluation(slug, value, "the server said so", null, null);
     }
 
-    private static OctopusContext contextWith(ServerSideEvaluation... evaluations) {
-        return new OctopusContext(new EvaluationResponse(List.of(evaluations), new byte[0]));
+    private static FeatureFlagEvaluator contextWith(ServerSideEvaluation... evaluations) {
+        return new FeatureFlagEvaluator(new EvaluationResponse(List.of(evaluations), new byte[0]));
     }
 
     @Test
@@ -85,7 +85,7 @@ class OctopusContextTests {
 
     @Test
     void anEmptyResponseThrowsFlagNotFoundForEveryFlag() {
-        assertThatThrownBy(() -> OctopusContext.empty().evaluate("feature-a", null))
+        assertThatThrownBy(() -> FeatureFlagEvaluator.empty().evaluate("feature-a", null))
                 .isInstanceOf(FlagNotFoundError.class);
     }
 
@@ -93,9 +93,9 @@ class OctopusContextTests {
     void exposesTheContentHashOfTheResponseItHolds() {
         byte[] contentHash = {0x01, 0x02};
 
-        assertThat(new OctopusContext(new EvaluationResponse(List.of(), contentHash)).getContentHash())
+        assertThat(new FeatureFlagEvaluator(new EvaluationResponse(List.of(), contentHash)).getContentHash())
                 .isEqualTo(contentHash);
-        assertThat(OctopusContext.empty().getContentHash()).isEmpty();
+        assertThat(FeatureFlagEvaluator.empty().getContentHash()).isEmpty();
     }
 
     @Test
@@ -105,7 +105,7 @@ class OctopusContextTests {
         List<ServerSideEvaluation> evaluations = OctopusObjectMapper.INSTANCE.readValue(
                 Contexts.json("[ null, { 'slug': 'feature-a', 'value': true, 'reason': 'Enabled.' } ]"),
                 new TypeReference<List<ServerSideEvaluation>>() {});
-        var context = new OctopusContext(new EvaluationResponse(evaluations, new byte[0]));
+        var context = new FeatureFlagEvaluator(new EvaluationResponse(evaluations, new byte[0]));
 
         assertThat(context.evaluate("feature-a", null).getValue()).isTrue();
         assertThatThrownBy(() -> context.evaluate("no-such-flag", null))
@@ -116,7 +116,7 @@ class OctopusContextTests {
     void aResponseWithNoEvaluationsResolvesNothingRatherThanFailing() {
         // Defence in depth: the client turns a null body into a failed fetch, so this shape should not
         // reach the evaluator — but if it does, every flag is not-found rather than an NPE.
-        var context = new OctopusContext(new EvaluationResponse(null, new byte[0]));
+        var context = new FeatureFlagEvaluator(new EvaluationResponse(null, new byte[0]));
 
         assertThatThrownBy(() -> context.evaluate("feature-a", null)).isInstanceOf(FlagNotFoundError.class);
         assertThat(context.findEvaluationBySlug("feature-a")).isNull();

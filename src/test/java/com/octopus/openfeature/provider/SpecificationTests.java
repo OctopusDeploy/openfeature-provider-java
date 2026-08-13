@@ -52,11 +52,11 @@ class SpecificationTests {
     @MethodSource("fixtureTestCases")
     void evaluate(String fileName, String description, String responseJson, FixtureCase testCase) {
         String token = server.configure(responseJson);
-        OctopusConfiguration config = new OctopusConfiguration(token, new ProductMetadata("TestClient"));
+        OctopusFeatureConfiguration config = new OctopusFeatureConfiguration(token, new ProductMetadata("TestClient"));
         config.setServerUri(URI.create(server.baseUrl()));
 
         OpenFeatureAPI api = OpenFeatureAPI.getInstance();
-        api.setProviderAndWait(new OctopusProvider(config));
+        api.setProviderAndWait(new OctopusFeatureProvider(config));
         Client client = api.getClient();
 
         EvaluationContext ctx = buildContext(testCase.configuration.context);

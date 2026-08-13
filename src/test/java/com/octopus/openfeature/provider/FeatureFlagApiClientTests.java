@@ -17,14 +17,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class OctopusClientTests {
+class FeatureFlagApiClientTests {
 
     private static final String PROVIDER_VERSION = loadProviderVersion();
 
     private static String loadProviderVersion() {
         try {
             var projectProperties = new Properties();
-            try (var resourceStream = OctopusClient.class.getClassLoader().getResourceAsStream("project.properties"))
+            try (var resourceStream = FeatureFlagApiClient.class.getClassLoader().getResourceAsStream("project.properties"))
             {
                 projectProperties.load(resourceStream);
             }
@@ -39,8 +39,8 @@ class OctopusClientTests {
 
     @Test
     void buildOctopusClientHeaderValue_withNameOnly_headerValueContainsProductNameAndProviderInformation() {
-        var config = new OctopusConfiguration("test-id", new ProductMetadata("MyProduct"));
-        var client = new OctopusClient(config);
+        var config = new OctopusFeatureConfiguration("test-id", new ProductMetadata("MyProduct"));
+        var client = new FeatureFlagApiClient(config);
 
         assertThat(client.buildOctopusClientHeaderValue())
                 .isEqualTo("MyProduct openfeature-provider-java/" + PROVIDER_VERSION);
@@ -48,8 +48,8 @@ class OctopusClientTests {
 
     @Test
     void buildOctopusClientHeaderValue_withNameAndVersion_headerValueContainsProductAndProviderInformation() {
-        var config = new OctopusConfiguration("test-id", new ProductMetadata("MyProduct", "2024.1.0"));
-        var client = new OctopusClient(config);
+        var config = new OctopusFeatureConfiguration("test-id", new ProductMetadata("MyProduct", "2024.1.0"));
+        var client = new FeatureFlagApiClient(config);
 
         assertThat(client.buildOctopusClientHeaderValue())
                 .isEqualTo("MyProduct/2024.1.0 openfeature-provider-java/" + PROVIDER_VERSION);
@@ -59,8 +59,8 @@ class OctopusClientTests {
     void buildOctopusClientHeaderValue_withNameContainingUnsupportedChars_stripsCharsFromHeaderValue() {
         // Note: More character checking tests are in ProductMetadataTests.java
 
-        var config = new OctopusConfiguration("test-id", new ProductMetadata("My Product"));
-        var client = new OctopusClient(config);
+        var config = new OctopusFeatureConfiguration("test-id", new ProductMetadata("My Product"));
+        var client = new FeatureFlagApiClient(config);
 
         assertThat(client.buildOctopusClientHeaderValue())
                 .isEqualTo("MyProduct openfeature-provider-java/" + PROVIDER_VERSION);
@@ -83,10 +83,10 @@ class OctopusClientTests {
         wireMock.stop();
     }
 
-    private OctopusClient clientForServer() {
-        var config = new OctopusConfiguration("test-id", new ProductMetadata("MyProduct"));
+    private FeatureFlagApiClient clientForServer() {
+        var config = new OctopusFeatureConfiguration("test-id", new ProductMetadata("MyProduct"));
         config.setServerUri(URI.create(wireMock.baseUrl()));
-        return new OctopusClient(config);
+        return new FeatureFlagApiClient(config);
     }
 
     private String requestedPaths() {
@@ -96,26 +96,26 @@ class OctopusClientTests {
     }
 
     @Test
-    void haveFeatureFlagsChanged_requestsTheV4CheckEndpoint() throws Exception {
+    void haveFeaturesChanged_requestsTheV4CheckEndpoint() throws Exception {
         wireMock.stubFor(get(anyUrl()).willReturn(aResponse()
                 .withStatus(200)
                 .withHeader("Content-Type", "application/json")
                 .withBody("{\"contentHash\":\"" + CONTENT_HASH + "\"}")));
 
-        var haveChanged = clientForServer().haveFeatureFlagsChanged(new byte[]{0x03, 0x04});
+        var haveChanged = clientForServer().haveFeaturesChanged(new byte[]{0x03, 0x04});
 
         assertThat(requestedPaths()).isEqualTo(CHECK_PATH);
         assertThat(haveChanged).isTrue();
     }
 
     @Test
-    void haveFeatureFlagsChanged_whenTheContentHashIsUnchanged_reportsNoChange() throws Exception {
+    void haveFeaturesChanged_whenTheContentHashIsUnchanged_reportsNoChange() throws Exception {
         wireMock.stubFor(get(anyUrl()).willReturn(aResponse()
                 .withStatus(200)
                 .withHeader("Content-Type", "application/json")
                 .withBody("{\"contentHash\":\"" + CONTENT_HASH + "\"}")));
 
-        var haveChanged = clientForServer().haveFeatureFlagsChanged(new byte[]{0x01, 0x02});
+        var haveChanged = clientForServer().haveFeaturesChanged(new byte[]{0x01, 0x02});
 
         assertThat(haveChanged).isFalse();
     }

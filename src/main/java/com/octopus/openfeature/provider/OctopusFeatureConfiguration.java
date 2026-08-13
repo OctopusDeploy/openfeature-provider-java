@@ -4,7 +4,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Objects;
 
-public class OctopusConfiguration {
+public class OctopusFeatureConfiguration {
     private final String clientIdentifier;
     private final ProductMetadata productMetadata;
 
@@ -12,7 +12,7 @@ public class OctopusConfiguration {
     private URI serverUri = DEFAULT_SERVER_URI;
     private Duration cacheDuration = Duration.ofMinutes(1);
 
-    public OctopusConfiguration(String clientIdentifier, ProductMetadata productMetadata) {
+    public OctopusFeatureConfiguration(String clientIdentifier, ProductMetadata productMetadata) {
         this.clientIdentifier = Objects.requireNonNull(clientIdentifier);
         this.productMetadata = Objects.requireNonNull(productMetadata);
     }
@@ -30,8 +30,7 @@ public class OctopusConfiguration {
         return cacheDuration;
     }
 
-    public Duration setCacheDuration(Duration cacheDuration) {
+    public void setCacheDuration(Duration cacheDuration) {
         this.cacheDuration = cacheDuration;
-        return this.cacheDuration;
     }
 }

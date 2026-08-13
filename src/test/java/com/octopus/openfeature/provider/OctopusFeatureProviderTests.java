@@ -12,7 +12,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class OctopusProviderTests {
+class OctopusFeatureProviderTests {
 
     private Client client;
 
@@ -22,7 +22,7 @@ class OctopusProviderTests {
                 List.of(new ServerSideEvaluation("feature-a", true, "The flag is enabled for this environment.", null, null)),
                 new byte[0]
         );
-        var provider = new OctopusProvider(new FakeOctopusContextProvider(new OctopusContext(response)));
+        var provider = new OctopusFeatureProvider(new FakeFeatureFlagEvaluatorCache(new FeatureFlagEvaluator(response)));
         OpenFeatureAPI.getInstance().setProviderAndWait(provider);
         client = OpenFeatureAPI.getInstance().getClient();
     }
