@@ -5,8 +5,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import java.util.stream.Stream;
 
 /**
- * The shared bucketing vectors, asserted against every percentage-rollout implementation in this
- * library.
+ * The shared bucketing vectors, asserted against this library's percentage rollout.
  *
  * <p>These verify that a bucket comes out the same as it does in the equivalent implementations in the
  * other Octopus OpenFeature provider libraries (e.g. .NET). The expected values are derived from the

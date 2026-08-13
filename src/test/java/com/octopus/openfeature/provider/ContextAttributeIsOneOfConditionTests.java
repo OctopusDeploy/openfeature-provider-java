@@ -50,8 +50,7 @@ class ContextAttributeIsOneOfConditionTests {
 
     @Test
     void aNonStringValueIsTreatedAsAbsent() {
-        // Value.asString() is null for a non-string, and v3 segment matching skips those entries too, so
-        // a numeric attribute never matches a string value.
+        // Value.asString() is null for a non-string, so a numeric attribute never matches a string value.
         var context = new ClientSideEvaluationContext(
                 Contexts.EVALUATION_KEY, new MutableContext().add("user-id", 1234));
 

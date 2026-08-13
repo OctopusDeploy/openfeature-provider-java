@@ -8,9 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PercentageRolloutTests {
 
-    // The same vectors the v3 path is held to. v3 keeps its own copy of this hash — package access is
-    // not hierarchical, so neither can call the other while both stay package-private — and running one
-    // list against both is what stops the two drifting apart.
     @ParameterizedTest(name = "[{index}] ({0}, {1}) -> {2}")
     @MethodSource("com.octopus.openfeature.provider.RolloutVectors#cases")
     void getNormalizedNumberMatchesExpectedValue(String evaluationKey, String targetingKey, int expected) {

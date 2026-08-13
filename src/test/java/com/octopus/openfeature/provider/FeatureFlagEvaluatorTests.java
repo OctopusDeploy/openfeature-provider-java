@@ -72,8 +72,9 @@ class FeatureFlagEvaluatorTests {
 
     @Test
     void aNullFlagKeyThrowsFlagNotFoundRatherThanFailing() {
-        // The slug comes from the caller, so an unset config value arrives here as null. v3 answered
-        // FLAG_NOT_FOUND; anything else surfaces as ErrorCode.GENERAL with a raw exception message.
+        // The slug comes from the caller, so an unset config value arrives here as null. FLAG_NOT_FOUND
+        // is the answer callers expect; anything else surfaces as ErrorCode.GENERAL with a raw exception
+        // message.
         var context = contextWith(serverResolved("feature-a", true));
 
         assertThatThrownBy(() -> context.evaluate(null, null))
