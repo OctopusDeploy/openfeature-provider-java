@@ -84,10 +84,9 @@ runs:
         echo "path=$DEST" >> "$GITHUB_OUTPUT"
         echo "Bundle: $DEST"
 
-    # Fork builds are not pushed to Octopus, so upload the bundle as an artifact instead.
+    # Prerelease builds of this provider are not published to Maven Central, so make them available as an artifact for downloading for testing.
     - name: Publish bundle artifact
       uses: actions/upload-artifact@v7
-      if: github.event.pull_request.head.repo.fork == true
       with:
         name: ${{ steps.bundle.outputs.path }}
         path: ${{ steps.bundle.outputs.path }}
