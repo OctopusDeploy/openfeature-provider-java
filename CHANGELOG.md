@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.1.0](https://github.com/OctopusDeploy/openfeature-provider-java/compare/v2.0.0...v2.1.0) (2026-10-07)
+
+
+### Features
+
+* **deps:** update dependency dev.openfeature:sdk to v1.22.1 ([#65](https://github.com/OctopusDeploy/openfeature-provider-java/issues/65)) ([75647e3](https://github.com/OctopusDeploy/openfeature-provider-java/commit/75647e3a013031e231e27dc93e7168a579335ba1))
+* **deps:** update dependency dev.openfeature:sdk to v1.23.0 ([#74](https://github.com/OctopusDeploy/openfeature-provider-java/issues/74)) ([8c0b020](https://github.com/OctopusDeploy/openfeature-provider-java/commit/8c0b020ab919761fd95e46eb750fb9eba49e450a))
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.22.2 ([#61](https://github.com/OctopusDeploy/openfeature-provider-java/issues/61)) ([ebdd62b](https://github.com/OctopusDeploy/openfeature-provider-java/commit/ebdd62b07af77655321fa2d3bf6b85efaa027808))
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.22.3 [security] ([#73](https://github.com/OctopusDeploy/openfeature-provider-java/issues/73)) ([2001858](https://github.com/OctopusDeploy/openfeature-provider-java/commit/2001858c3aed7e0b610bbcb9bfc09ed34bdf5dfc))
+
 ## [2.0.0](https://github.com/OctopusDeploy/openfeature-provider-java/compare/v1.0.0...v2.0.0) (2026-08-13)
 
 
