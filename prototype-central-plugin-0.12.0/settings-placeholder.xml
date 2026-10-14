@@ -1,0 +1,10 @@
+<!-- PROTOTYPE: mirrors the placeholder `central` server that setup-java writes in CI. -->
+<settings>
+  <servers>
+    <server>
+      <id>central</id>
+      <username>placeholder</username>
+      <password>placeholder</password>
+    </server>
+  </servers>
+</settings>
