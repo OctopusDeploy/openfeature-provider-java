@@ -27,10 +27,18 @@ module.exports = {
   // Extend with recommended config
   globalExtends: ['config:recommended'],
 
-  // Only manage Maven deps and GitHub Actions (leaves the `specification` submodule alone)
-  enabledManagers: ['maven', 'github-actions'],
+  // Only manage Maven deps, the Maven Wrapper, and GitHub Actions (leaves the `specification` submodule alone)
+  enabledManagers: ['maven', 'maven-wrapper', 'github-actions'],
 
   packageRules: [
+    {
+      // Hold Maven below 3.10. Under Maven 3.10, central-publishing-maven-plugin 0.8.0 adds local-repository files
+      // to the bundle and Maven Central rejects it. CI doesn't catch this, because validation happens at publish time.
+      // Remove once the plugin is upgraded and a Maven 3.10 bundle is confirmed clean. See BMBB-1251.
+      matchManagers: ['maven-wrapper'],
+      matchPackageNames: ['org.apache.maven:apache-maven'],
+      allowedVersions: '<3.10.0',
+    },
     {
       // OpenFeature SDK updates are worth releasing as a minor version, even if not breaking
       matchPackageNames: ['dev.openfeature:sdk'],

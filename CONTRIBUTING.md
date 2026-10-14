@@ -38,12 +38,13 @@ git submodule update --init
 ### Prerequisites
 
 - JDK 11 or later. The provider targets Java 11, which is also what CI uses, so avoid APIs added after Java 11.
-- [Maven](https://maven.apache.org/) 3.x
 
 ### Commands
 
+Use the Maven Wrapper (`./mvnw`, or `mvnw.cmd` on Windows). It downloads the Maven version that CI uses, so you don't need Maven installed.
+
 ```bash
-mvn -B test
+./mvnw -B test
 ```
 
 The specification fixtures run as part of `SpecificationTests`.
@@ -51,7 +52,7 @@ The specification fixtures run as part of `SpecificationTests`.
 The build signs artifacts with GPG during the `verify` phase. If you run `verify`, `package`, or `install` locally without a GPG key set up, skip signing:
 
 ```bash
-mvn -B verify -Dgpg.skip=true
+./mvnw -B verify -Dgpg.skip=true
 ```
 
 ## Making a pull request

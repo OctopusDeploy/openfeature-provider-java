@@ -34,6 +34,13 @@ runs:
         server-username: MAVEN_CENTRAL_USERNAME
         server-password: MAVEN_CENTRAL_PASSWORD
 
+    # Build with the Maven version pinned in .mvn/wrapper/maven-wrapper.properties, not the runner image's.
+    # Under Maven 3.10, central-publishing-maven-plugin 0.8.0 adds local-repository files to the bundle, and Maven
+    # Central rejects it. See BMBB-1251.
+    - name: Show Maven version
+      shell: bash
+      run: ./mvnw -v
+
     - name: Compute version
       id: version
       shell: bash
@@ -56,7 +63,7 @@ runs:
       shell: bash
       # Must run before the deploy build: resource filtering bakes ${project.version} into
       # src/main/resources/project.properties during process-resources, so the version has to be set on disk first.
-      run: mvn -B versions:set -DnewVersion=${{ steps.version.outputs.version }} -DgenerateBackupPoms=false
+      run: ./mvnw -B versions:set -DnewVersion=${{ steps.version.outputs.version }} -DgenerateBackupPoms=false
 
     - name: Build, test, sign, and assemble bundle
       shell: bash
@@ -71,7 +78,7 @@ runs:
         MAVEN_GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
         MAVEN_CENTRAL_USERNAME: placeholder
         MAVEN_CENTRAL_PASSWORD: placeholder
-      run: mvn -B clean deploy ${{ github.event.pull_request.head.repo.fork == true && '-Dgpg.skip=true' || '' }}
+      run: ./mvnw -B clean deploy ${{ github.event.pull_request.head.repo.fork == true && '-Dgpg.skip=true' || '' }}
 
     - name: Name the bundle
       id: bundle
