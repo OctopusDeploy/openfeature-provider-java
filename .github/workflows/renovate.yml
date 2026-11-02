@@ -1,30 +1,13 @@
-name: Renovate update dependencies
+name: Renovate
 on:
   schedule:
-    # UTC 10:00 PM Sunday - Thursday (AEST 8:00 AM, Monday - Friday)
-    - cron: "0 22 * * 0-4"
+    - cron: "0 3 * * 1-5"
+      timezone: Australia/Brisbane
   workflow_dispatch:
-    inputs:
-      dry-run:
-        description: "Dry run"
-        required: false
-        default: false
-        type: boolean
-
-permissions:
-  contents: read
-
 jobs:
   renovate:
-    name: Renovate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Renovate
-        uses: renovatebot/github-action@6d26fcf0275dc65624cbc3d51fe78bc773f98321 # v46.3.6
-        with:
-          configurationFile: renovate-config.js
-          token: ${{ secrets.RENOVATE_GITHUB_TOKEN }}
-        env:
-          RENOVATE_DRY_RUN: ${{ inputs.dry-run && 'full' || null }}
+    uses: OctopusDeploy/team-bmbb-renovate-config/.github/workflows/renovate.yml@main
+    permissions:
+      contents: read
+    secrets:
+      RENOVATE_GITHUB_TOKEN: ${{ secrets.RENOVATE_GITHUB_TOKEN }}
